@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LinoshkaISA">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="description" content="Linoshka's personal ISA portfolio tracker">
+<title>LinoshkaISA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- PWA Manifest inline -->
+<script>
+const manifestData = {
+  name: "LinoshkaISA",
+  short_name: "ISA",
+  description: "Personal ISA Portfolio Tracker",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#0a0c0f",
+  theme_color: "#0a0c0f",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230a0c0f'/><text x='50%' y='55%' font-size='100' text-anchor='middle' dominant-baseline='middle' fill='%23c8f050'>₤</text></svg>", sizes: "192x192", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestUrl = URL.createObjectURL(blob);
+document.write('<link rel="manifest" href="' + manifestUrl + '">');
+</script>
+
+<style>
+:root {
+  --bg: #0a0c0f;
+  --surface: #111519;
+  --surface2: #181d24;
+  --border: #1f2830;
+  --accent: #c8f050;
+  --blue: #50c8f0;
+  --warn: #f0a050;
+  --red: #f87171;
+  --green: #4ade80;
+  --text: #e8edf2;
+  --muted: #6b7a8d;
+  --nav-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:14px}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;height:100%;height:100dvh}
+#topbar{
+  padding: calc(var(--safe-top) + 14px) 20px 14px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  position:relative;z-index:10;
+}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.02em}
+.topbar-title span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-badge{font-size:10px;padding:3px 8px;border:1px solid var(--border);color:var(--muted);letter-spacing:0.08em}
+#scrollArea{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px)}
+#bottomNav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:rgba(10,12,15,0.95);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex;
+  z-index:100;
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all 0.2s;color:var(--muted);border:none;background:transparent;padding:0}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:20px;line-height:1}
+.nav-label{font-size:9px;letter-spacing:0.08em;text-transform:uppercase}
+
+/* ── PAGES ── */
+.page{display:none;padding:20px;animation:fadeIn 0.2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TYPOGRAPHY ── */
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:11px;color:var(--muted);margin-bottom:20px}
+.section-head{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px}
+
+/* ── CARDS ── */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--border);padding:16px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border)}
+.card.accent::before{background:var(--accent)}
+.card.green::before{background:var(--green)}
+.card.red::before{background:var(--red)}
+.card.blue::before{background:var(--blue)}
+.card.warn::before{background:var(--warn)}
+.card-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;line-height:1}
+.card-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.card-sub.up{color:var(--green)}
+.card-sub.dn{color:var(--red)}
+.card-full{grid-column:1/-1}
+
+/* ── CHART CONTAINERS ── */
+.chart-box{background:var(--surface);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.chart-box-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.chart-box-title span{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+
+/* ── INSIGHT CARDS ── */
+.insight{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);padding:14px;margin-bottom:10px;display:grid;grid-template-columns:36px 1fr;gap:12px}
+.insight.g{border-left-color:var(--green)}
+.insight.r{border-left-color:var(--red)}
+.insight.y{border-left-color:var(--warn)}
+.insight.b{border-left-color:var(--blue)}
+.insight-icon{font-size:18px;display:flex;align-items:flex-start;padding-top:2px}
+.insight-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:5px}
+.insight-body{font-size:11px;color:var(--muted);line-height:1.7}
+.insight-body strong{color:var(--text)}
+
+/* ── BAR ROWS ── */
+.bar-rows{display:flex;flex-direction:column;gap:10px}
+.bar-r{display:flex;flex-direction:column;gap:3px}
+.bar-lbl{display:flex;justify-content:space-between;font-size:11px}
+.bar-lbl span:last-child{color:var(--muted)}
+.bar-track{height:6px;background:var(--surface2)}
+.bar-fill{height:100%;transition:width 1s ease}
+.bf-accent{background:var(--accent)}
+.bf-blue{background:var(--blue)}
+.bf-warn{background:var(--warn)}
+.bf-red{background:var(--red)}
+.bf-muted{background:var(--muted)}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+tr:active td{background:var(--surface2)}
+.tag{display:inline-block;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;font-weight:500}
+.tag.g{background:rgba(74,222,128,.15);color:var(--green)}
+.tag.r{background:rgba(248,113,113,.15);color:var(--red)}
+.tag.y{background:rgba(240,160,80,.15);color:var(--warn)}
+
+/* ── LIVE PRICES ── */
+.fx-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px;font-size:11px;flex-wrap:wrap}
+.fx-bar strong{color:var(--text)}
+.refresh-btn{margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--blue);color:var(--blue);background:transparent;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:0;-webkit-appearance:none}
+.refresh-btn:active{background:var(--blue);color:#0a0c0f}
+.refresh-btn:disabled{opacity:.4}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.live-status{padding:9px 14px;font-size:11px;margin-bottom:12px;border-left:3px solid var(--accent);background:rgba(200,240,80,.05);color:var(--muted);display:none}
+.live-status.err{border-color:var(--red);background:rgba(248,113,113,.05)}
+.live-status.show{display:block}
+.skeleton{display:inline-block;height:.9em;background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;vertical-align:middle}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.pnl-pos{color:var(--green)}
+.pnl-neg{color:var(--red)}
+.holding-row{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:6px}
+.holding-row.pos{border-left-color:var(--green)}
+.holding-row.neg{border-left-color:var(--red)}
+.hr-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.hr-ticker{font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-left:6px}
+.hr-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.hr-price{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;text-align:right}
+.hr-chg{font-size:10px;text-align:right;margin-top:2px}
+.hr-pnl{font-size:11px;font-weight:600;margin-top:4px}
+.hr-pnl-pct{font-size:10px}
+.alloc-bar{height:3px;background:var(--surface2);margin-top:6px;grid-column:1/-1}
+.alloc-fill{height:100%;background:var(--blue);transition:width .8s ease}
+
+/* ── UPLOAD ── */
+.drop-zone{border:2px dashed var(--border);padding:36px 20px;text-align:center;cursor:pointer;margin-bottom:16px;background:var(--surface);transition:all .2s;-webkit-appearance:none}
+.drop-zone.drag{border-color:var(--accent);background:rgba(200,240,80,.04)}
+.dz-icon{font-size:32px;margin-bottom:8px}
+.dz-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.dz-sub{font-size:11px;color:var(--muted);line-height:1.7}
+.dz-sub strong{color:var(--accent)}
+.file-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px;font-size:12px}
+.fi-icon{font-size:16px}
+.fi-name{flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-size{color:var(--muted);font-size:10px;flex-shrink:0}
+.fi-rm{color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;line-height:1}
+.process-btn{width:100%;padding:16px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;border:none;cursor:pointer;margin-bottom:20px;-webkit-appearance:none;transition:all .15s}
+.process-btn:active{background:#b8e040;transform:scale(.99)}
+.process-btn:disabled{background:var(--surface2);color:var(--muted)}
+.ai-box{background:var(--surface);border:1px solid var(--border);padding:16px;margin-bottom:16px;display:none}
+.ai-box-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.ai-content{font-size:12px;color:var(--muted);line-height:1.8}
+.ai-content strong{color:var(--text)}
+.ai-section{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.ai-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.ai-section-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;letter-spacing:.05em}
+.typing-cursor{display:inline-block;width:7px;height:13px;background:var(--accent);animation:blink .8s step-end infinite;vertical-align:middle;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── ALERTS ── */
+.alert-item{background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.alert-info{flex:1}
+.alert-ticker{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.alert-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.alert-toggle{width:44px;height:26px;background:var(--surface2);border-radius:13px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:1px solid var(--border)}
+.alert-toggle.on{background:var(--accent)}
+.alert-toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s}
+.alert-toggle.on::after{transform:translateX(18px);background:#0a0c0f}
+.add-alert-form{background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-input{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;-webkit-appearance:none}
+.form-input:focus{outline:none;border-color:var(--accent)}
+.form-select{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;-webkit-appearance:none}
+.add-btn{width:100%;padding:12px;background:var(--surface2);border:1px solid var(--accent);color:var(--accent);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;-webkit-appearance:none}
+.add-btn:active{background:rgba(200,240,80,.1)}
+
+/* ── SETTINGS (API KEY) ── */
+.settings-row{background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:8px}
+.settings-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.settings-input{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;-webkit-appearance:none}
+.settings-input:focus{outline:none;border-color:var(--accent)}
+.settings-desc{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6}
+.save-btn{width:100%;padding:12px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;margin-top:8px;-webkit-appearance:none}
+.save-btn:active{background:#b8e040}
+
+/* ── INSTALL BANNER ── */
+#installBanner{background:linear-gradient(135deg,rgba(200,240,80,.1),rgba(80,200,240,.1));border:1px solid var(--accent);padding:14px 16px;margin-bottom:16px;display:none;align-items:center;gap:12px}
+#installBanner.show{display:flex}
+.install-text{flex:1;font-size:12px;color:var(--text)}
+.install-text strong{color:var(--accent)}
+.install-btn{padding:9px 16px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.08em;border:none;cursor:pointer;white-space:nowrap;-webkit-appearance:none}
+
+/* ── SCORE ── */
+.score-big{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--accent);text-align:center;padding:20px 0 8px}
+.score-sub{text-align:center;font-size:11px;color:var(--muted);margin-bottom:20px}
+
+/* ── MISC ── */
+.note{font-size:11px;color:var(--muted);line-height:1.7;padding:12px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px}
+.note strong{color:var(--text)}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px;font-size:11px}
+.hist-date{color:var(--muted);font-size:10px}
+</style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="topbar-title">Linoshka<span>.</span></div>
+    <div class="topbar-right">
+      <div class="topbar-badge" id="lastUpdateBadge">ISA · 2022–2026</div>
+    </div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div id="scrollArea">
+
+    <!-- ═══ PAGE: HOME ═══ -->
+    <div class="page active" id="page-home">
+
+      <!-- Install banner (shows when installable) -->
+      <div id="installBanner">
+        <div class="install-text"><strong>Add to Home Screen</strong><br>Tap to install as an app</div>
+        <button class="install-btn" id="installBtn">Install</button>
+      </div>
+
+      <div class="page-title">Portfolio</div>
+      <div class="page-sub">ISA · Freetrade · Since 2022</div>
+
+      <div class="cards">
+        <div class="card accent card-full">
+          <div class="card-label">Portfolio Value (Feb 2026)</div>
+          <div class="card-val">£10,125.18</div>
+          <div class="card-sub up">↑ 2.8% this year</div>
+        </div>
+        <div class="card green">
+          <div class="card-label">Net Profit</div>
+          <div class="card-val">+£2,120</div>
+          <div class="card-sub up">After all fees</div>
+        </div>
+        <div class="card blue">
+          <div class="card-label">Dividends</div>
+          <div class="card-val">£102</div>
+          <div class="card-sub">Since 2022</div>
+        </div>
+        <div class="card warn">
+          <div class="card-label">Fees Paid</div>
+          <div class="card-val">£455</div>
+          <div class="card-sub dn">4 years total</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Net Invested</div>
+          <div class="card-val">£8,005</div>
+          <div class="card-sub">£15,100 in − £7,095 out</div>
+        </div>
+      </div>
+
+      <div class="section-head">Portfolio Growth</div>
+      <div class="chart-box">
+        <div class="chart-box-title">Value Over Time <span>Annual snapshots</span></div>
+        <canvas id="homeGrowthChart" height="140"></canvas>
+      </div>
+
+      <div class="section-head">Deposits & Withdrawals</div>
+      <div class="bar-rows" style="margin-bottom:20px">
+        <div class="bar-r"><div class="bar-lbl"><span>Mar 2022 Top-up</span><span>£100</span></div><div class="bar-track"><div class="bar-fill bf-blue" style="width:1%"></div></div></div>
+        <div class="bar-r"><div class="bar-lbl"><span>Jun 2022 Top-up</span><span>£5,000</span></div><div class="bar-track"><div class="bar-fill bf-accent" style="width:50%"></div></div></div>
+        <div class="bar-r"><div class="bar-lbl"><span>Mar 2024 Top-up</span><span>£10,000</span></div><div class="bar-track"><div class="bar-fill bf-accent" style="width:100%"></div></div></div>
+        <div class="bar-r"><div class="bar-lbl"><span>Apr 2024 Withdrawal</span><span style="color:var(--red)">−£7,095</span></div><div class="bar-track"><div class="bar-fill bf-red" style="width:71%"></div></div></div>
+      </div>
+
+      <div class="section-head">Annual Fee % of Portfolio</div>
+      <div class="bar-rows" style="margin-bottom:20px">
+        <div class="bar-r"><div class="bar-lbl"><span>Year 1 — 1.05%</span><span>£51.72</span></div><div class="bar-track"><div class="bar-fill bf-warn" style="width:61%"></div></div></div>
+        <div class="bar-r"><div class="bar-lbl"><span>Year 2 — 1.73% ⬆ highest</span><span>£104.26</span></div><div class="bar-track"><div class="bar-fill bf-red" style="width:100%"></div></div></div>
+        <div class="bar-r"><div class="bar-lbl"><span>Year 3 — 1.56%</span><span>£154.08</span></div><div class="bar-track"><div class="bar-fill bf-warn" style="width:90%"></div></div></div>
+        <div class="bar-r"><div class="bar-lbl"><span>Year 4 — 1.43% ⬇ improving</span><span>£145.21</span></div><div class="bar-track"><div class="bar-fill bf-accent" style="width:83%"></div></div></div>
+      </div>
+
+      <div class="section-head">Holdings Mix</div>
+      <div class="chart-box">
+        <canvas id="holdingsMixChart" height="180"></canvas>
+      </div>
+
+      <div class="section-head">Investor Score</div>
+      <div class="score-big">C+</div>
+      <div class="score-sub">Good bones · Costly habits · Improving</div>
+      <div class="chart-box" style="margin-bottom:8px">
+        <canvas id="radarChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: LIVE ═══ -->
+    <div class="page" id="page-live">
+      <div class="page-title">Live Prices</div>
+      <div class="page-sub" id="liveSubtitle">Tap refresh to load latest quotes</div>
+
+      <!-- API key needed notice -->
+      <div class="note" id="apiKeyNotice" style="border-color:var(--warn);display:none">
+        ⚠️ <strong>Finnhub API key needed.</strong> Go to <strong>Settings</strong> (bottom right) → enter your free key from <strong>finnhub.io</strong> to enable live prices. Takes 2 minutes to sign up, completely free.
+      </div>
+
+      <div class="fx-bar">
+        <span>GBP/USD: <strong id="fxRateVal">—</strong></span>
+        <span style="font-size:10px;color:var(--muted)" id="fxTimeVal">not loaded</span>
+        <button class="refresh-btn" id="refreshBtn" onclick="loadLivePrices()">
+          <span id="refreshIcon">↻</span> Refresh
+        </button>
+      </div>
+
+      <div class="live-status" id="liveStatus"></div>
+
+      <div class="cards">
+        <div class="card accent card-full">
+          <div class="card-label">Total Live Value</div>
+          <div class="card-val" id="ls-totalVal"><span class="skeleton" style="width:100px"></span></div>
+          <div class="card-sub" id="ls-totalSub">Load prices to update</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Cost Basis</div>
+          <div class="card-val" id="ls-cost"><span class="skeleton" style="width:80px"></span></div>
+          <div class="card-sub">What you paid</div>
+        </div>
+        <div class="card" id="ls-pnlCard">
+          <div class="card-label">Unrealised P&L</div>
+          <div class="card-val" id="ls-pnl"><span class="skeleton" style="width:70px"></span></div>
+          <div class="card-sub" id="ls-pnlPct">vs cost basis</div>
+        </div>
+        <div class="card" id="ls-winCard">
+          <div class="card-label">Best Performer</div>
+          <div class="card-val" id="ls-win"><span class="skeleton" style="width:60px"></span></div>
+          <div class="card-sub" id="ls-winSub">—</div>
+        </div>
+        <div class="card" id="ls-loseCard">
+          <div class="card-label">Weakest</div>
+          <div class="card-val" id="ls-lose"><span class="skeleton" style="width:60px"></span></div>
+          <div class="card-sub" id="ls-loseSub">—</div>
+        </div>
+      </div>
+
+      <div class="section-head">Holdings</div>
+      <div id="holdingsList">
+        <div style="color:var(--muted);font-size:11px;padding:20px 0;text-align:center">Tap Refresh to load live prices</div>
+      </div>
+
+      <div class="note">
+        <strong>Prices via Finnhub API</strong> · US stocks (MSFT, NVDA, GOOGL, AMZN, LLY) fetched in USD then converted to GBP live. LSE ETFs (VUSA, EQQQ, VWRP) fetched in GBX (pence). Mutual funds show purchase price. Positions calculated from your full Freetrade activity history.
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: ANALYSIS ═══ -->
+    <div class="page" id="page-analysis">
+      <div class="page-title">Analysis</div>
+      <div class="page-sub">Mistakes, wins & how to improve</div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px">
+        <button class="sub-tab active" onclick="showSubTab('mistakes',this)">Mistakes</button>
+        <button class="sub-tab" onclick="showSubTab('wins',this)">Wins</button>
+        <button class="sub-tab" onclick="showSubTab('improve',this)">Improve</button>
+        <button class="sub-tab" onclick="showSubTab('costs',this)">Costs</button>
+        <button class="sub-tab" onclick="showSubTab('profit',this)">P&L</button>
+      </div>
+
+      <!-- MISTAKES -->
+      <div class="sub-page active" id="sub-mistakes">
+        <div class="insight r">
+          <div class="insight-icon">💸</div>
+          <div>
+            <div class="insight-title">The £7,095 Withdrawal — Apr 2024</div>
+            <div class="insight-body">Withdrew £7,095 just one month after depositing £10,000. Had it stayed invested through the 2024–25 bull run, your portfolio today could be <strong>£16k–£20k+</strong>. This single decision is your biggest financial impact.</div>
+          </div>
+        </div>
+        <div class="insight r">
+          <div class="insight-icon">⚡</div>
+          <div>
+            <div class="insight-title">Leveraged ETFs (3BLR, LQQ3) — 2026</div>
+            <div class="insight-body">Bought and sold 3x leveraged ETFs within days. LQQ3: bought £246, sold £235 — a loss. These suffer from <strong>volatility decay</strong> and are completely unsuitable for ISA investing.</div>
+          </div>
+        </div>
+        <div class="insight y">
+          <div class="insight-icon">🪙</div>
+          <div>
+            <div class="insight-title">Selling AMZN, AAPL, NVDA — May 2024</div>
+            <div class="insight-body">Sold all three just before a major rally. Nvidia alone nearly doubled from May 2024 prices by early 2025. You also paid FX fees twice on each.</div>
+          </div>
+        </div>
+        <div class="insight y">
+          <div class="insight-icon">📉</div>
+          <div>
+            <div class="insight-title">Sold 55 VUSA Units — Nov 2025</div>
+            <div class="insight-body">Sold £5,372 of VUSA then bought only £1,927 back 4 days later — ending up with fewer units than you started with, near a temporary dip.</div>
+          </div>
+        </div>
+        <div class="insight y">
+          <div class="insight-icon">🥇</div>
+          <div>
+            <div class="insight-title">Gold & Silver Short-Term Trading</div>
+            <div class="insight-body">Multiple in/out trades on GLDW and WSLV in 2026. Each trade incurs FX fees (silver is USD). Tactical speculation inconsistent with a long-term strategy.</div>
+          </div>
+        </div>
+        <div class="chart-box" style="margin-top:16px">
+          <div class="chart-box-title">Estimated Opportunity Cost</div>
+          <canvas id="mistakeChart" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- WINS -->
+      <div class="sub-page" id="sub-wins">
+        <div class="insight g">
+          <div class="insight-icon">🏦</div>
+          <div>
+            <div class="insight-title">4 Years of Consistent Investing</div>
+            <div class="insight-body">Most people never start. You've been through crashes, rallies, inflation and rate cycles since 2022 and <strong>you're still here</strong>. That consistency is everything.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">🛡️</div>
+          <div>
+            <div class="insight-title">ISA — Every Penny of Profit is Tax-Free</div>
+            <div class="insight-body">Every capital gain and dividend inside your ISA is free from UK CGT and Income Tax forever. Over 20 years this could save you <strong>tens of thousands of pounds</strong>.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">📈</div>
+          <div>
+            <div class="insight-title">Bought Amazon Near the 2022 Bottom</div>
+            <div class="insight-body">Bought £999 + £998 of Amazon in Jun/Aug 2022 near multi-year lows (~$103–$113/share). Sold later at ~$136 — roughly <strong>25–30% gain</strong>. Contrarian, disciplined.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">🟢</div>
+          <div>
+            <div class="insight-title">Spotted Nvidia in December 2023</div>
+            <div class="insight-body">Bought £1,498 of NVDA at the start of the AI boom. Sold for £1,753 — <strong>+£255 (+17%)</strong> in under 2 months. You read the moment correctly.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">🌍</div>
+          <div>
+            <div class="insight-title">VWRP — The Best Long-Term ISA ETF</div>
+            <div class="insight-body">Your recent VWRP buys are exactly right. 3,500+ companies, 50 countries, GBP-priced (no FX fees), accumulating (auto-reinvests), 0.22% annual fee. The gold standard.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">🔄</div>
+          <div>
+            <div class="insight-title">Monthly DCA Buying Habit</div>
+            <div class="insight-body">Regular MSFT buys at ~£499/month in recent months is textbook pound-cost averaging. <strong>Keep doing this exactly.</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMPROVE -->
+      <div class="sub-page" id="sub-improve">
+        <div class="insight g">
+          <div class="insight-icon">🎯</div>
+          <div>
+            <div class="insight-title">Suggested Portfolio Structure</div>
+            <div class="insight-body">
+              <strong>70% — VWRP</strong> (All-World Acc, GBP, no FX fees)<br>
+              <strong>20% — VUAG</strong> (S&P 500 Acc, GBP, US tilt)<br>
+              <strong>10% — Individual stocks</strong> (MSFT, NVDA, GOOGL)<br><br>
+              Eliminates most FX fees. Reduces decision fatigue. Proven long-term performance.
+            </div>
+          </div>
+        </div>
+        <div class="insight b">
+          <div class="insight-icon">🛑</div>
+          <div>
+            <div class="insight-title">Never Use Leveraged ETFs</div>
+            <div class="insight-body">3x ETFs lose value over time due to volatility decay. They are <strong>not suitable for ISA investing</strong>. Remove from watchlist entirely.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">💱</div>
+          <div>
+            <div class="insight-title">Reduce FX Fees</div>
+            <div class="insight-body">You've paid <strong>£193 in FX fees</strong> in 4 years. Every USD stock trade costs 0.59%. Switch to GBP-priced ETFs (VWRP, VUAG) for broad exposure — completely free to trade.</div>
+          </div>
+        </div>
+        <div class="insight g">
+          <div class="insight-icon">🌱</div>
+          <div>
+            <div class="insight-title">Use Acc Not Dis ETFs</div>
+            <div class="insight-body">VUAG auto-reinvests dividends — no FX fee, no manual work. VUSA pays dividends in cash which you then must reinvest (paying fees again). <strong>Switch VUSA → VUAG</strong> when you next trade.</div>
+          </div>
+        </div>
+        <div class="chart-box" style="margin-top:16px">
+          <div class="chart-box-title">ISA Growth Projection <span>£500/month</span></div>
+          <canvas id="projChart" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- COSTS -->
+      <div class="sub-page" id="sub-costs">
+        <div class="cards">
+          <div class="card blue">
+            <div class="card-label">Subscription/yr</div>
+            <div class="card-val">£77.87</div>
+            <div class="card-sub">~£6.49/month</div>
+          </div>
+          <div class="card warn">
+            <div class="card-label">FX Fees/yr</div>
+            <div class="card-val">£62.34</div>
+            <div class="card-sub dn">0.59% per USD trade</div>
+          </div>
+          <div class="card red">
+            <div class="card-label">Withholding Tax/yr</div>
+            <div class="card-val">£1.68</div>
+            <div class="card-sub">US dividends</div>
+          </div>
+          <div class="card">
+            <div class="card-label">ETF Fees/yr</div>
+            <div class="card-val">£3.32</div>
+            <div class="card-sub">Built into price</div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Fees Over 4 Years</div>
+          <canvas id="feesLineChart" height="150"></canvas>
+        </div>
+        <div class="section-head">Cost Per Trade Type</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Trade</th><th>Fee</th><th>On £500</th></tr></thead>
+            <tbody>
+              <tr><td>GBP ETF (VWRP, VUSA)</td><td style="color:var(--green)">Free</td><td style="color:var(--green)">£0</td></tr>
+              <tr><td>USD stock (MSFT, NVDA…)</td><td style="color:var(--warn)">0.59% FX</td><td style="color:var(--warn)">£2.95</td></tr>
+              <tr><td>US dividend</td><td style="color:var(--red)">15% tax</td><td style="color:var(--red)">15% of div</td></tr>
+              <tr><td>Freetrade sub</td><td style="color:var(--blue)">£6.49/mo</td><td>Fixed</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- P&L -->
+      <div class="sub-page" id="sub-profit">
+        <div class="note">True profit = <strong>Portfolio Value + Withdrawn − Deposited − Fees</strong></div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">Total Deposited</div>
+            <div class="card-val">£15,100</div>
+          </div>
+          <div class="card warn">
+            <div class="card-label">Total Withdrawn</div>
+            <div class="card-val">£7,095</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Net Cash In</div>
+            <div class="card-val">£8,005</div>
+          </div>
+          <div class="card green card-full">
+            <div class="card-label">True Net Profit</div>
+            <div class="card-val">+£2,120</div>
+            <div class="card-sub up">After all fees · Portfolio £10,125 − Net in £8,005</div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Cumulative Fees Paid</div>
+          <canvas id="cumFeeChart" height="140"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: UPLOAD ═══ -->
+    <div class="page" id="page-upload">
+      <div class="page-title">Upload</div>
+      <div class="page-sub">Update your data with new exports</div>
+
+      <div class="note" id="noAnthropicKeyNotice" style="border-color:var(--warn);display:none">
+        ⚠️ <strong>Anthropic API key needed.</strong> Go to <strong>⚙️ Settings</strong> → add your key from <strong>console.anthropic.com</strong> to enable AI analysis. Each analysis costs ~$0.03 from your $5 credit.
+      </div>
+
+      <div class="drop-zone" id="dropZone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" multiple accept=".csv,.pdf" onchange="handleFiles(this.files)" style="display:none">
+        <div class="dz-icon">📂</div>
+        <div class="dz-title">Upload Freetrade Exports</div>
+        <div class="dz-sub">
+          Drop files here or tap to browse<br>
+          Accepts: <strong>activity-feed.csv</strong> and/or <strong>Annual Costs PDFs</strong>
+        </div>
+      </div>
+
+      <div id="fileQueue"></div>
+
+      <button class="process-btn" id="processBtn" onclick="processUploads()" disabled>
+        ✦ Analyse with AI
+      </button>
+
+      <div class="ai-box" id="aiBox">
+        <div class="ai-box-title">
+          <span>✦ AI Analysis</span>
+          <span id="aiSpinner" style="display:none"><span class="spin">↻</span></span>
+          <span id="aiTs" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);font-weight:400"></span>
+        </div>
+        <div class="ai-content" id="aiContent">
+          <span class="typing-cursor" id="typingCursor" style="display:none"></span>
+        </div>
+      </div>
+
+      <div id="uploadHistSection" style="display:none">
+        <div class="section-head">Upload History</div>
+        <div id="uploadHistory"></div>
+      </div>
+
+      <div class="section-head">How to Export from Freetrade</div>
+      <div class="note">
+        <strong>Activity CSV:</strong> App → Profile → Statements → Activity Feed Export → Choose dates → Export<br><br>
+        <strong>Annual PDFs:</strong> App → Profile → Documents → Annual Costs & Charges → Download each year<br><br>
+        Upload both together each quarter for the full picture.
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: SETTINGS ═══ -->
+    <div class="page" id="page-settings">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">API keys & price alerts</div>
+
+      <!-- ANTHROPIC KEY -->
+      <div class="section-head">Anthropic API Key (AI Analysis)</div>
+      <div class="settings-row">
+        <div class="settings-label">API Key</div>
+        <input class="settings-input" type="password" id="anthropicKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="settings-desc">
+          Needed for the <strong>Upload → Analyse with AI</strong> feature. Get one at <strong>console.anthropic.com</strong> — sign up, add $5 credit, create a key. Each analysis costs ~$0.03. Your key is stored <strong>only on this device</strong>, never sent anywhere except Anthropic's API.
+        </div>
+        <button class="save-btn" onclick="saveAnthropicKey()">Save Key</button>
+      </div>
+      <div id="anthropicKeyStatus" style="font-size:11px;color:var(--green);padding:4px 0 8px;display:none">✓ Anthropic key saved</div>
+
+      <!-- FINNHUB KEY -->
+      <div class="section-head">Finnhub API Key (Live Prices)</div>
+      <div class="settings-row">
+        <div class="settings-label">API Key</div>
+        <input class="settings-input" type="password" id="finnhubKeyInput" placeholder="Enter your Finnhub API key…" autocomplete="off" spellcheck="false">
+        <div class="settings-desc">
+          Get a <strong>free</strong> key at <strong>finnhub.io</strong> — sign up takes 2 minutes, no credit card needed. The free tier gives 60 calls/minute which is more than enough. Your key is stored only on this device.
+        </div>
+        <button class="save-btn" onclick="saveApiKey()">Save Key</button>
+      </div>
+      <div id="keyStatus" style="font-size:11px;color:var(--green);padding:4px 0 8px;display:none">✓ Finnhub key saved</div>
+
+      <div class="section-head">Price Alerts</div>
+      <div class="add-alert-form">
+        <div class="form-row">
+          <select class="form-select" id="alertTicker">
+            <option value="MSFT">MSFT — Microsoft</option>
+            <option value="NVDA">NVDA — Nvidia</option>
+            <option value="GOOGL">GOOGL — Alphabet</option>
+            <option value="AMZN">AMZN — Amazon</option>
+            <option value="LLY">LLY — Eli Lilly</option>
+            <option value="VUSA">VUSA — S&P 500</option>
+            <option value="EQQQ">EQQQ — NASDAQ 100</option>
+            <option value="VWRP">VWRP — All-World</option>
+          </select>
+          <select class="form-select" id="alertDir">
+            <option value="above">Rises above</option>
+            <option value="below">Falls below</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <input class="form-input" type="number" id="alertPrice" placeholder="Target price (GBP)" step="0.01">
+          <input class="form-input" type="text" id="alertNote" placeholder="Note (optional)">
+        </div>
+        <button class="add-btn" onclick="addAlert()">+ Add Alert</button>
+      </div>
+
+      <div id="alertsList"></div>
+
+      <div class="section-head">About</div>
+      <div class="note">
+        <strong>LinoshkaISA</strong> — Personal portfolio dashboard<br>
+        Built from Freetrade activity data · April 2026<br><br>
+        Save to home screen on iOS: tap <strong>Share →Add to Home Screen</strong><br>
+        Save to home screen on Android: tap <strong>Menu → Add to Home Screen</strong><br><br>
+        Not financial advice · For personal reference only
+      </div>
+    </div>
+
+  </div><!-- end scrollArea -->
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottomNav">
+    <button class="nav-item active" onclick="showPage('home',this)">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item" onclick="showPage('live',this)">
+      <span class="nav-icon">📡</span>
+      <span class="nav-label">Live</span>
+    </button>
+    <button class="nav-item" onclick="showPage('analysis',this)">
+      <span class="nav-icon">🔍</span>
+      <span class="nav-label">Analysis</span>
+    </button>
+    <button class="nav-item" onclick="showPage('upload',this)">
+      <span class="nav-icon">📤</span>
+      <span class="nav-label">Upload</span>
+    </button>
+    <button class="nav-item" onclick="showPage('settings',this)">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Settings</span>
+    </button>
+  </nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── COLOURS ──────────────────────────────────────────────
+const C = { accent:'#c8f050', blue:'#50c8f0', warn:'#f0a050', red:'#f87171', green:'#4ade80', muted:'#6b7a8d', border:'#1f2830' };
+Chart.defaults.color = C.muted;
+Chart.defaults.borderColor = C.border;
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 10;
+const mc = (id,cfg) => { const el=document.getElementById(id); if(!el) return; return new Chart(el,cfg); };
+
+// ── NAVIGATION ────────────────────────────────────────────
+let _liveLoaded = false;
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('scrollArea').scrollTop = 0;
+  if(name==='live' && !_liveLoaded) { _liveLoaded=true; checkApiKey(); }
+  if(name==='upload') checkUploadReady();
+}
+
+function showSubTab(name, btn) {
+  document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('sub-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// Sub-tab styles
+const stStyles = document.createElement('style');
+stStyles.textContent = `.sub-tab{padding:7px 14px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap;-webkit-appearance:none}.sub-tab.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}.sub-page{display:none}.sub-page.active{display:block}`;
+document.head.appendChild(stStyles);
+
+// ── HOME CHARTS ───────────────────────────────────────────
+mc('homeGrowthChart',{type:'line',data:{labels:['Feb \'23','Feb \'24','Feb \'25','Feb \'26'],datasets:[{label:'Value (£)',data:[4937,6015,9853,10125],borderColor:C.accent,backgroundColor:'rgba(200,240,80,0.08)',fill:true,tension:0.4,pointBackgroundColor:C.accent,pointRadius:5,borderWidth:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'£'+v.toLocaleString()},grid:{color:C.border}},x:{grid:{color:C.border}}}}});
+
+mc('holdingsMixChart',{type:'doughnut',data:{labels:['S&P 500','MSFT','GOOGL','NVDA','AMZN','VWRP','EQQQ','Funds','Other'],datasets:[{data:[20,26,14,8,7,4,4,6,11],backgroundColor:[C.accent,C.blue,C.warn,'#a855f7',C.green,'#ec4899','#06b6d4','#f59e0b',C.muted],borderWidth:0,hoverOffset:4}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:10,font:{size:10}}}}}});
+
+mc('radarChart',{type:'radar',data:{labels:['Asset Quality','Diversification','Tax Efficiency','Cost Control','Consistency','Long-term','Risk Mgmt'],datasets:[{label:'You',data:[85,65,95,55,70,60,55],borderColor:C.accent,backgroundColor:'rgba(200,240,80,0.1)',borderWidth:2,pointBackgroundColor:C.accent,pointRadius:3},{label:'Avg Retail',data:[45,35,40,40,45,35,40],borderColor:C.muted,backgroundColor:'rgba(107,122,141,0.06)',borderWidth:1,borderDash:[3,3],pointRadius:2}]},options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:10,font:{size:10}}}},scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:C.border},pointLabels:{font:{size:9},color:C.muted},angleLines:{color:C.border}}}}});
+
+mc('mistakeChart',{type:'bar',data:{labels:['Withdrawal','Sold NVDA early','Sold AMZN/AAPL','VUSA over-sell','Leverage ETFs'],datasets:[{label:'Est. cost (£)',data:[5000,1200,1500,600,150],backgroundColor:[C.red,C.warn,C.warn,C.warn,C.muted],borderWidth:0}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'£'+v.toLocaleString()},grid:{color:C.border}},y:{grid:{display:false}}}}});
+
+mc('projChart',{type:'line',data:{labels:['Now','1yr','2yr','3yr','5yr','7yr','10yr'],datasets:[{label:'Conservative 5%',data:[10125,13900,17900,22100,31300,41800,59400],borderColor:C.muted,borderDash:[4,4],fill:false,tension:0.4,pointRadius:2},{label:'Base 8% + £500/mo',data:[10125,16600,23700,31500,50200,73700,120000],borderColor:C.accent,backgroundColor:'rgba(200,240,80,0.06)',fill:true,tension:0.4,pointRadius:3,borderWidth:2}]},options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:8,font:{size:9}}}},scales:{y:{ticks:{callback:v=>'£'+(v>=1000?(v/1000).toFixed(0)+'k':v)},grid:{color:C.border}},x:{grid:{color:C.border}}}}});
+
+mc('feesLineChart',{type:'line',data:{labels:['2022–23','2023–24','2024–25','2025–26'],datasets:[{label:'Total Fees (£)',data:[51.72,104.26,154.08,145.21],borderColor:C.red,backgroundColor:'rgba(248,113,113,0.08)',fill:true,tension:0.4,pointRadius:4,borderWidth:2,pointBackgroundColor:C.red},{label:'Fee %',data:[1.05,1.73,1.56,1.43],borderColor:C.warn,fill:false,tension:0.4,pointRadius:3,borderWidth:2,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:8,font:{size:9}}}},scales:{y:{ticks:{callback:v=>'£'+v},grid:{color:C.border}},y2:{position:'right',ticks:{callback:v=>v+'%'},grid:{drawOnChartArea:false}},x:{grid:{color:C.border}}}}});
+
+mc('cumFeeChart',{type:'line',data:{labels:['Start','Feb \'23','Feb \'24','Feb \'25','Feb \'26'],datasets:[{label:'Cumulative Fees',data:[0,51.72,155.98,310.06,455.27],borderColor:C.red,backgroundColor:'rgba(248,113,113,0.08)',fill:true,tension:0.4,pointBackgroundColor:C.red,pointRadius:5,borderWidth:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'£'+v},grid:{color:C.border}},x:{grid:{color:C.border}}}}});
+
+// ── POSITIONS ─────────────────────────────────────────────
+const POSITIONS = [
+  {name:'Microsoft',     ticker:'MSFT',  fSymbol:'MSFT',   cur:'USD', qty:10.512, costGBP:9*325.25+2.735*362.94+1.635*303.54+1.794*276.70+1.724*287.27+1.624*305.58-9*341.94},
+  {name:'Nvidia',        ticker:'NVDA',  fSymbol:'NVDA',   cur:'USD', qty:4.270,  costGBP:9*97.11+0.748*132.64+3.522*140.89-9*105.55},
+  {name:'Alphabet',      ticker:'GOOGL', fSymbol:'GOOGL',  cur:'USD', qty:6.496,  costGBP:0.430*231.02+1.991*249.27+4.075*243.57},
+  {name:'Amazon',        ticker:'AMZN',  fSymbol:'AMZN',   cur:'USD', qty:2.888,  costGBP:2.888*171.84},
+  {name:'Eli Lilly',     ticker:'LLY',   fSymbol:'LLY',    cur:'USD', qty:0.14546,costGBP:0.14546*682.38},
+  {name:'VUSA S&P 500',  ticker:'VUSA',  fSymbol:'VUSA.L', cur:'GBX', qty:20,     costGBP:26*76.03+11*90.34+12*79.10+6*78.17+20*96.34-55*97.68},
+  {name:'EQQQ NASDAQ',   ticker:'EQQQ',  fSymbol:'EQQQ.L', cur:'GBX', qty:2,      costGBP:2*404.40+2*462.69-2*424.89},
+  {name:'VWRP All-World',ticker:'VWRP',  fSymbol:'VWRP.L', cur:'GBX', qty:2,      costGBP:126.01+126.56},
+  {name:'Fidelity Asia', ticker:'FXFA',  fSymbol:null,      cur:'GBP', qty:2.14,   costGBP:50.00,  manualPrice:23.36},
+  {name:'iShares EM ESG',ticker:'EMFQ',  fSymbol:null,      cur:'GBP', qty:154.766,costGBP:199.99, manualPrice:1.292},
+  {name:'HSBC Europe',   ticker:'HEUR',  fSymbol:null,      cur:'GBP', qty:9.76,   costGBP:99.94,  manualPrice:10.24},
+];
+POSITIONS.forEach(p => p.avgCost = p.qty > 0 ? p.costGBP / p.qty : 0);
+
+let _gbpUsd = null;
+
+// ── FINNHUB LIVE PRICES ───────────────────────────────────
+function getApiKey() { return localStorage.getItem('finnhub_key') || ''; }
+
+async function finnhubQuote(symbol) {
+  const key = getApiKey();
+  if(!key) throw new Error('NO_KEY');
+  const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const d = await r.json();
+  if(d.c === 0 && d.pc === 0) throw new Error('No data for '+symbol);
+  return { price: d.c, prev: d.pc, change: d.d, changePct: d.dp };
+}
+
+async function finnhubFX() {
+  // GBP to USD rate via Finnhub forex
+  const key = getApiKey();
+  if(!key) throw new Error('NO_KEY');
+  const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=OANDA:GBP_USD&token=${key}`);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const d = await r.json();
+  return d.c || 1.27; // fallback
+}
+
+function toGBP(p, raw) {
+  if(p.cur === 'USD') return raw / _gbpUsd;
+  if(p.cur === 'GBX') return raw / 100; // pence to pounds
+  return raw;
+}
+
+function checkApiKey() {
+  const key = getApiKey();
+  const notice = document.getElementById('apiKeyNotice');
+  if(!key) { notice.style.display='block'; }
+  else { notice.style.display='none'; }
+}
+
+async function loadLivePrices() {
+  const key = getApiKey();
+  if(!key) {
+    const st = document.getElementById('liveStatus');
+    st.className='live-status err show';
+    st.textContent='⚠ No API key. Go to Settings to add your free Finnhub key.';
+    return;
+  }
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  const st = document.getElementById('liveStatus');
+  btn.disabled=true; icon.innerHTML='<span class="spin">↻</span>';
+  st.className='live-status show'; st.textContent='Fetching GBP/USD rate…';
+
+  try {
+    _gbpUsd = await finnhubFX();
+    document.getElementById('fxRateVal').textContent = `1 GBP = $${_gbpUsd.toFixed(4)}`;
+    document.getElementById('fxTimeVal').textContent = new Date().toLocaleTimeString('en-GB');
+    document.getElementById('liveSubtitle').textContent = 'Updated '+new Date().toLocaleTimeString('en-GB');
+
+    const syms = POSITIONS.filter(p=>p.fSymbol).map(p=>p.fSymbol);
+    const prices = {};
+    const errors = [];
+    for(const s of syms) {
+      st.textContent = 'Fetching '+s+'…';
+      try {
+        prices[s] = await finnhubQuote(s);
+        await new Promise(r=>setTimeout(r,100));
+      } catch(e) { errors.push(s); }
+    }
+
+    renderHoldings(prices);
+
+    if(errors.length) { st.className='live-status err show'; st.textContent='⚠ Could not fetch: '+errors.join(', ')+'. Try refreshing.'; }
+    else { st.textContent='✓ Loaded at '+new Date().toLocaleTimeString('en-GB'); setTimeout(()=>{st.className='live-status'},4000); }
+
+    // Check alerts
+    checkAlerts(prices);
+
+  } catch(e) {
+    st.className='live-status err show';
+    st.textContent = e.message.includes('NO_KEY') ? '⚠ Add your Finnhub API key in Settings' : '✗ '+e.message;
+  }
+  btn.disabled=false; icon.innerHTML='↻';
+}
+
+function renderHoldings(prices) {
+  const list = document.getElementById('holdingsList');
+  list.innerHTML = '';
+  let totVal=0, totCost=0;
+  const rows=[];
+
+  POSITIONS.forEach(p => {
+    let liveGBP=null, change=null, changePct=null;
+    if(p.manualPrice) { liveGBP=p.manualPrice; }
+    else if(p.fSymbol && prices[p.fSymbol]) {
+      const q=prices[p.fSymbol];
+      liveGBP=toGBP(p,q.price);
+      if(q.prev){const pg=toGBP(p,q.prev); change=liveGBP-pg; changePct=(change/pg)*100;}
+    }
+    const mktVal = liveGBP!==null ? liveGBP*p.qty : null;
+    const pnl = mktVal!==null ? mktVal-p.costGBP : null;
+    const pnlPct = (pnl!==null && p.costGBP>0) ? (pnl/p.costGBP)*100 : null;
+    if(mktVal!==null) totVal+=mktVal;
+    totCost+=p.costGBP;
+    rows.push({p,liveGBP,change,changePct,mktVal,pnl,pnlPct});
+  });
+
+  rows.sort((a,b)=>(b.mktVal||0)-(a.mktVal||0));
+
+  rows.forEach(({p,liveGBP,change,changePct,mktVal,pnl,pnlPct}) => {
+    const alloc = totVal>0&&mktVal ? (mktVal/totVal*100) : 0;
+    const isPos = pnl===null || pnl>=0;
+    const s = v => v>=0?'+':'';
+    const div = document.createElement('div');
+    div.className = 'holding-row '+(pnl!==null?(pnl>=0?'pos':'neg'):'');
+    div.innerHTML = `
+      <div>
+        <div><span class="hr-name">${p.name}</span><span class="hr-ticker">${p.ticker}</span></div>
+        <div class="hr-meta">${p.qty<1?p.qty.toFixed(5):p.qty.toFixed(3)} shares · avg £${p.avgCost.toFixed(2)}${p.manualPrice?' · last known':''}</div>
+        ${pnl!==null?`<div class="hr-pnl ${pnl>=0?'pnl-pos':'pnl-neg'}">${s(pnl)}£${pnl.toFixed(2)} <span class="hr-pnl-pct">(${s(pnlPct)}${pnlPct.toFixed(1)}%)</span></div>`:''}
+        <div class="alloc-bar"><div class="alloc-fill" style="width:${Math.min(alloc,100).toFixed(1)}%"></div></div>
+      </div>
+      <div>
+        <div class="hr-price">${liveGBP!==null?'£'+liveGBP.toFixed(2):'—'}</div>
+        ${change!==null?`<div class="hr-chg ${change>=0?'pnl-pos':'pnl-neg'}">${s(change)}${change.toFixed(2)} (${s(changePct)}${changePct.toFixed(2)}%)</div>`:''}
+        ${mktVal!==null?`<div style="font-size:10px;color:var(--muted);margin-top:4px">£${mktVal.toFixed(0)} · ${alloc.toFixed(1)}%</div>`:''}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+
+  // Summary cards
+  const totPnl=totVal-totCost;
+  const totPnlPct=totCost>0?(totPnl/totCost*100):0;
+  const s=v=>v>=0?'+':'';
+  document.getElementById('ls-totalVal').textContent='£'+totVal.toFixed(2);
+  document.getElementById('ls-totalSub').textContent='Live market value';
+  document.getElementById('ls-cost').textContent='£'+totCost.toFixed(2);
+  document.getElementById('ls-pnl').textContent=s(totPnl)+'£'+totPnl.toFixed(2);
+  document.getElementById('ls-pnl').style.color=totPnl>=0?'var(--green)':'var(--red)';
+  document.getElementById('ls-pnlPct').textContent=s(totPnlPct)+totPnlPct.toFixed(1)+'% overall';
+
+  const sorted=rows.filter(r=>r.pnlPct!==null).sort((a,b)=>b.pnlPct-a.pnlPct);
+  if(sorted.length){
+    const best=sorted[0],worst=sorted[sorted.length-1];
+    document.getElementById('ls-win').textContent=best.p.ticker;
+    document.getElementById('ls-win').style.color='var(--green)';
+    document.getElementById('ls-winSub').textContent=s(best.pnlPct)+best.pnlPct.toFixed(1)+'% unrealised';
+    document.getElementById('ls-lose').textContent=worst.p.ticker;
+    document.getElementById('ls-lose').style.color=worst.pnlPct<0?'var(--red)':'var(--accent)';
+    document.getElementById('ls-loseSub').textContent=s(worst.pnlPct)+worst.pnlPct.toFixed(1)+'% unrealised';
+  }
+}
+
+// ── ALERTS ───────────────────────────────────────────────
+let _alerts = JSON.parse(localStorage.getItem('priceAlerts')||'[]');
+
+function saveAlerts(){ localStorage.setItem('priceAlerts',JSON.stringify(_alerts)); }
+
+function renderAlerts(){
+  const list = document.getElementById('alertsList');
+  if(!_alerts.length){ list.innerHTML='<div style="font-size:11px;color:var(--muted);padding:10px 0">No alerts set. Add one above.</div>'; return; }
+  list.innerHTML = _alerts.map((a,i)=>`
+    <div class="alert-item">
+      <div class="alert-info">
+        <div class="alert-ticker">${a.ticker}</div>
+        <div class="alert-desc">${a.dir==='above'?'Rises above':'Falls below'} £${a.price}${a.note?' · '+a.note:''}</div>
+      </div>
+      <div class="alert-toggle ${a.active?'on':''}" onclick="toggleAlert(${i})"></div>
+      <div style="font-size:18px;cursor:pointer;color:var(--muted);padding:0 4px" onclick="removeAlert(${i})">✕</div>
+    </div>`).join('');
+}
+
+function addAlert(){
+  const ticker=document.getElementById('alertTicker').value;
+  const dir=document.getElementById('alertDir').value;
+  const price=parseFloat(document.getElementById('alertPrice').value);
+  const note=document.getElementById('alertNote').value.trim();
+  if(!price||isNaN(price)){ document.getElementById('alertPrice').style.borderColor='var(--red)'; return; }
+  document.getElementById('alertPrice').style.borderColor='';
+  _alerts.push({ticker,dir,price,note,active:true,id:Date.now()});
+  saveAlerts(); renderAlerts();
+  document.getElementById('alertPrice').value='';
+  document.getElementById('alertNote').value='';
+}
+
+function toggleAlert(i){ _alerts[i].active=!_alerts[i].active; saveAlerts(); renderAlerts(); }
+function removeAlert(i){ _alerts.splice(i,1); saveAlerts(); renderAlerts(); }
+
+function checkAlerts(prices){
+  if(!('Notification' in window)) return;
+  _alerts.filter(a=>a.active).forEach(a=>{
+    const p = POSITIONS.find(p=>p.ticker===a.ticker);
+    if(!p||!p.fSymbol||!prices[p.fSymbol]) return;
+    const liveGBP = toGBP(p, prices[p.fSymbol].price);
+    const triggered = a.dir==='above' ? liveGBP>=a.price : liveGBP<=a.price;
+    if(triggered){
+      if(Notification.permission==='granted'){
+        new Notification('💰 Price Alert: '+a.ticker,{body:`${a.ticker} is now £${liveGBP.toFixed(2)} (${a.dir==='above'?'above':'below'} £${a.price})${a.note?' — '+a.note:''}`,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%230a0c0f"/><text x="32" y="40" font-size="36" text-anchor="middle" fill="%23c8f050">₤</text></svg>'});
+      } else if(Notification.permission==='default'){
+        Notification.requestPermission();
+      }
+    }
+  });
+}
+
+function requestNotificationPermission(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
+
+// ── SETTINGS ─────────────────────────────────────────────
+function getAnthropicKey(){ return localStorage.getItem('anthropic_key')||''; }
+
+function saveAnthropicKey(){
+  const val=document.getElementById('anthropicKeyInput').value.trim();
+  if(!val) return;
+  localStorage.setItem('anthropic_key',val);
+  const st=document.getElementById('anthropicKeyStatus');
+  st.style.display='block';
+  setTimeout(()=>{st.style.display='none'},3000);
+  checkUploadReady();
+}
+
+function saveApiKey(){
+  const val=document.getElementById('finnhubKeyInput').value.trim();
+  if(!val) return;
+  localStorage.setItem('finnhub_key',val);
+  const st=document.getElementById('keyStatus');
+  st.style.display='block';
+  setTimeout(()=>{st.style.display='none'},3000);
+  checkApiKey();
+}
+
+function checkUploadReady(){
+  const notice=document.getElementById('noAnthropicKeyNotice');
+  if(notice) notice.style.display=getAnthropicKey()?'none':'block';
+}
+
+// Load saved keys into inputs
+window.addEventListener('DOMContentLoaded',()=>{
+  const fk=getApiKey();
+  if(fk) document.getElementById('finnhubKeyInput').value=fk;
+  const ak=getAnthropicKey();
+  if(ak) document.getElementById('anthropicKeyInput').value=ak;
+  renderAlerts();
+  checkUploadReady();
+});
+
+// ── UPLOAD & AI ───────────────────────────────────────────
+let _files = [];
+let _uploadLog = JSON.parse(localStorage.getItem('uploadLog2')||'[]');
+
+function renderUploadLog(){
+  const hist=document.getElementById('uploadHistory');
+  const sec=document.getElementById('uploadHistSection');
+  if(!_uploadLog.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  hist.innerHTML=_uploadLog.slice(-5).reverse().map(u=>`
+    <div class="hist-item">
+      <span>${u.files}</span>
+      <span class="hist-date">${u.date}</span>
+    </div>`).join('');
+}
+renderUploadLog();
+
+function handleFiles(files){
+  Array.from(files).forEach(f=>{if(!_files.find(x=>x.name===f.name))_files.push(f);});
+  renderQueue();
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+function renderQueue(){
+  const q=document.getElementById('fileQueue');
+  q.innerHTML=_files.map((f,i)=>`
+    <div class="file-item">
+      <span class="fi-icon">${f.name.endsWith('.csv')?'📊':'📄'}</span>
+      <span class="fi-name">${f.name}</span>
+      <span class="fi-size">${(f.size/1024).toFixed(1)}KB</span>
+      <span class="fi-rm" onclick="rmFile(${i})">✕</span>
+    </div>`).join('');
+  document.getElementById('processBtn').disabled=_files.length===0;
+}
+function rmFile(i){_files.splice(i,1);renderQueue();}
+
+async function processUploads(){
+  if(!_files.length) return;
+
+  // Check for API key first
+  const anthropicKey = getAnthropicKey();
+  if(!anthropicKey){
+    const box=document.getElementById('aiBox');
+    const content=document.getElementById('aiContent');
+    box.style.display='block';
+    content.innerHTML=`<div style="color:var(--warn);font-size:12px;line-height:1.8">
+      ⚠️ <strong style="color:var(--text)">No Anthropic API key found.</strong><br><br>
+      To use AI analysis:<br>
+      1. Go to <strong style="color:var(--text)">console.anthropic.com</strong><br>
+      2. Sign up → Billing → add $5<br>
+      3. API Keys → Create key (starts with sk-ant-…)<br>
+      4. Tap <strong style="color:var(--text)">⚙️ Settings</strong> in this app → paste key → Save<br>
+      5. Come back here and try again<br><br>
+      Each analysis costs ~$0.03 from your credit.
+    </div>`;
+    return;
+  }
+
+  const btn=document.getElementById('processBtn');
+  const box=document.getElementById('aiBox');
+  const content=document.getElementById('aiContent');
+  const spinner=document.getElementById('aiSpinner');
+  const cursor=document.getElementById('typingCursor');
+  btn.disabled=true; btn.textContent='↻ Analysing…';
+  box.style.display='block'; content.innerHTML='';
+  cursor.style.display='inline-block'; spinner.style.display='inline';
+
+  const msgContent=[];
+  let csvText='';
+
+  for(const file of _files){
+    if(file.name.endsWith('.csv')){
+      csvText=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.slice(0,14000));r.onerror=rej;r.readAsText(file);});
+    } else if(file.name.endsWith('.pdf')){
+      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+      msgContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+    }
+  }
+
+  const prompt=`You are analysing a UK investor's Freetrade Stocks & Shares ISA portfolio data.${csvText?'\n\nActivity CSV:\n'+csvText:''}\n\nProvide a structured analysis with these exact sections. Be specific with £ amounts and dates:\n\n**📊 PORTFOLIO SUMMARY**\nKey numbers: total invested, withdrawn, net in, portfolio value, fees, net profit.\n\n**📈 WHAT'S NEW**\nNew trades, dividends, or deposits since last period. Specific dates and amounts.\n\n**✅ WHAT YOU DID WELL**\n2-3 specific good decisions with amounts.\n\n**⚠️ WATCH OUT FOR**\n2-3 costly patterns or mistakes with estimated impact in £.\n\n**💡 YOUR NEXT 3 ACTIONS**\nConcrete, personalised steps. Include suggested amounts.\n\n**📅 FEES THIS PERIOD**\nSubscription, FX fees, tax, ETF costs. Total and % of portfolio.\n\nBe direct and personal. Use £ throughout.`;
+
+  msgContent.push({type:'text',text:prompt});
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1500,
+        messages:[{role:'user',content:msgContent}]
+      })
+    });
+
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err?.error?.message || `API error ${res.status} — check your key is correct`);
+    }
+
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'No response received.';
+    cursor.style.display='none';
+    renderAIText(text,content);
+
+    const entry={
+      date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+      files:_files.map(f=>f.name).join(', ')
+    };
+    _uploadLog.push(entry);
+    localStorage.setItem('uploadLog2',JSON.stringify(_uploadLog));
+    document.getElementById('aiTs').textContent=entry.date;
+    renderUploadLog();
+    _files=[]; renderQueue();
+
+  } catch(e){
+    cursor.style.display='none';
+    content.innerHTML=`<div style="color:var(--red);font-size:12px;line-height:1.8">
+      ✗ <strong style="color:var(--text)">Error: ${e.message}</strong><br><br>
+      ${e.message.includes('401')||e.message.includes('key') ? 'Double-check your Anthropic API key in ⚙️ Settings.' : 'Check your internet connection and try again.'}
+    </div>`;
+  }
+
+  spinner.style.display='none';
+  btn.disabled=false; btn.textContent='✦ Analyse with AI';
+}
+
+function renderAIText(text,container){
+  const sections=text.split(/\n(?=\*\*[📊📈✅⚠💡📅])/);
+  container.innerHTML=sections.filter(s=>s.trim()).map(section=>{
+    const lines=section.split('\n');
+    const title=lines[0].replace(/\*\*/g,'').trim();
+    const body=lines.slice(1).join('\n').trim();
+    const isSection=title.match(/^[📊📈✅⚠💡📅]/);
+    if(isSection){
+      return `<div class="ai-section"><div class="ai-section-title">${title}</div><div>${body.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div></div>`;
+    }
+    return `<div style="margin-bottom:8px">${section.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`;
+  }).join('');
+}
+
+// ── PWA INSTALL ───────────────────────────────────────────
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if(!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  const { outcome } = await _deferredInstallPrompt.userChoice;
+  if(outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
+  _deferredInstallPrompt = null;
+});
+
+// ── SERVICE WORKER (offline support) ─────────────────────
+if('serviceWorker' in navigator){
+  const swCode=`
+const CACHE='linoshka-isa-v1';
+const ASSETS=['/'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+self.addEventListener('fetch',e=>{
+  if(e.request.url.includes('finnhub.io')||e.request.url.includes('fonts.googleapis')||e.request.url.includes('cdnjs')) return;
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response('Offline',{status:503}))));
+});`;
+  const swBlob=new Blob([swCode],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+// Request notification permission on load
+setTimeout(requestNotificationPermission, 2000);
+</script>
+</body>
+</html>
