@@ -1,0 +1,2756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ISA Tracker">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="description" content="Personal Freetrade ISA Portfolio Tracker">
+<title>ISA Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+const _mf = {name:"ISA Tracker",short_name:"ISA",display:"standalone",background_color:"#0a0c0f",theme_color:"#0a0c0f",orientation:"portrait",start_url:"./",scope:"./",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230a0c0f'/><text x='50%' y='55%' font-size='100' text-anchor='middle' dominant-baseline='middle' fill='%23c8f050'>₤</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
+const _mb = new Blob([JSON.stringify(_mf)],{type:'application/json'});
+document.write('<link rel="manifest" href="'+URL.createObjectURL(_mb)+'">');
+</script>
+<style>
+:root{
+  --bg:#0a0c0f;--surface:#111519;--surface2:#181d24;--border:#1f2830;
+  --accent:#c8f050;--blue:#50c8f0;--warn:#f0a050;--red:#f87171;--green:#4ade80;
+  --text:#e8edf2;--muted:#6b7a8d;--nav-h:64px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:14px}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh}
+
+/* TOPBAR */
+#topbar{padding:calc(var(--safe-top) + 14px) 20px 14px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10}
+.tb-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.02em}
+.tb-title span{color:var(--accent)}
+.tb-sub{font-size:10px;color:var(--muted);letter-spacing:0.08em}
+
+/* SCROLL */
+#scrollArea{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px)}
+
+/* NAV */
+#bottomNav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,12,15,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted);border:none;background:transparent;padding:0;transition:color .2s}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:20px;line-height:1}
+.nav-label{font-size:9px;letter-spacing:0.08em;text-transform:uppercase}
+
+/* PAGES */
+.page{display:none;padding:20px;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ONBOARDING */
+#onboarding{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.ob-logo{font-size:56px;margin-bottom:16px}
+.ob-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px}
+.ob-title span{color:var(--accent)}
+.ob-sub{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:32px;max-width:320px}
+.ob-steps{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.ob-step{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--border);text-align:left}
+.ob-step-num{width:28px;height:28px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ob-step-text{font-size:12px;color:var(--muted);line-height:1.6}
+.ob-step-text strong{color:var(--text)}
+.ob-btn{width:100%;max-width:360px;padding:16px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;border:none;cursor:pointer}
+.ob-skip{margin-top:14px;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline}
+
+/* TYPOGRAPHY */
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:11px;color:var(--muted);margin-bottom:20px}
+.sec-head{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+
+/* EMPTY STATE */
+.empty-state{padding:40px 20px;text-align:center;background:var(--surface);border:1px solid var(--border);margin-bottom:16px}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.empty-sub{font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+.empty-btn{display:inline-block;padding:10px 20px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);padding:14px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border);transition:background .3s}
+.card.accent::before{background:var(--accent)}
+.card.green::before{background:var(--green)}
+.card.red::before{background:var(--red)}
+.card.blue::before{background:var(--blue)}
+.card.warn::before{background:var(--warn)}
+.card-full{grid-column:1/-1}
+.card-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;line-height:1}
+.card-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.card-sub.up{color:var(--green)}
+.card-sub.dn{color:var(--red)}
+
+/* CHART */
+.chart-box{background:var(--surface);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.chart-box-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+.chart-box-title span{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+
+/* INSIGHT */
+.insight{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);padding:14px;margin-bottom:10px;display:grid;grid-template-columns:32px 1fr;gap:10px}
+.insight.g{border-left-color:var(--green)}
+.insight.r{border-left-color:var(--red)}
+.insight.y{border-left-color:var(--warn)}
+.insight.b{border-left-color:var(--blue)}
+.i-icon{font-size:16px;padding-top:2px}
+.i-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:4px}
+.i-body{font-size:11px;color:var(--muted);line-height:1.7}
+.i-body strong{color:var(--text)}
+
+/* BARS */
+.bar-rows{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.bar-r{display:flex;flex-direction:column;gap:3px}
+.bar-lbl{display:flex;justify-content:space-between;font-size:11px}
+.bar-lbl span:last-child{color:var(--muted)}
+.bar-track{height:6px;background:var(--surface2)}
+.bar-fill{height:100%;transition:width 1s ease}
+.bf-a{background:var(--accent)}.bf-b{background:var(--blue)}.bf-w{background:var(--warn)}.bf-r{background:var(--red)}.bf-g{background:var(--green)}.bf-m{background:var(--muted)}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+tr:active td{background:var(--surface2)}
+.tag{display:inline-block;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;font-weight:500}
+.tag.g{background:rgba(74,222,128,.15);color:var(--green)}
+.tag.r{background:rgba(248,113,113,.15);color:var(--red)}
+.tag.y{background:rgba(240,160,80,.15);color:var(--warn)}
+
+/* LIVE */
+.fx-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px;font-size:11px;flex-wrap:wrap}
+.fx-bar strong{color:var(--text)}
+.refresh-btn{margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--blue);color:var(--blue);background:transparent;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;-webkit-appearance:none}
+.refresh-btn:active{background:var(--blue);color:#0a0c0f}
+.refresh-btn:disabled{opacity:.4}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.live-status{padding:9px 14px;font-size:11px;margin-bottom:12px;border-left:3px solid var(--accent);background:rgba(200,240,80,.05);color:var(--muted);display:none}
+.live-status.err{border-color:var(--red);background:rgba(248,113,113,.05)}
+.live-status.show{display:block}
+.skeleton{display:inline-block;height:.9em;background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;vertical-align:middle}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.pnl-pos{color:var(--green)}.pnl-neg{color:var(--red)}
+.h-row{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:6px}
+.h-row.pos{border-left-color:var(--green)}.h-row.neg{border-left-color:var(--red)}
+.h-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.h-ticker{font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-left:6px}
+.h-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.h-price{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;text-align:right}
+.h-chg{font-size:10px;text-align:right;margin-top:2px}
+.h-pnl{font-size:11px;font-weight:600;margin-top:4px}
+.alloc-bar{height:3px;background:var(--surface2);margin-top:6px;grid-column:1/-1}
+.alloc-fill{height:100%;background:var(--blue);transition:width .8s ease}
+
+/* UPLOAD */
+.drop-zone{border:2px dashed var(--border);padding:36px 20px;text-align:center;cursor:pointer;margin-bottom:16px;background:var(--surface);transition:all .2s}
+.drop-zone:active,.drop-zone.drag{border-color:var(--accent);background:rgba(200,240,80,.04)}
+.dz-icon{font-size:32px;margin-bottom:8px}
+.dz-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.dz-sub{font-size:11px;color:var(--muted);line-height:1.7}
+.dz-sub strong{color:var(--accent)}
+.file-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px;font-size:12px}
+.fi-name{flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-size{color:var(--muted);font-size:10px;flex-shrink:0}
+.fi-rm{color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;line-height:1}
+.process-btn{width:100%;padding:16px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;border:none;cursor:pointer;margin-bottom:20px;-webkit-appearance:none;transition:opacity .15s}
+.process-btn:active{opacity:.8}
+.process-btn:disabled{background:var(--surface2);color:var(--muted)}
+.ai-box{background:var(--surface);border:1px solid var(--border);padding:16px;margin-bottom:16px;display:none}
+.ai-box-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.ai-content{font-size:12px;color:var(--muted);line-height:1.85}
+.ai-content strong{color:var(--text)}
+.ai-sec{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.ai-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.ai-sec-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.typing-cursor{display:inline-block;width:7px;height:13px;background:var(--accent);animation:blink .8s step-end infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* SETTINGS */
+.settings-row{background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:8px}
+.s-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.s-input{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;-webkit-appearance:none;border-radius:0}
+.s-input:focus{outline:none;border-color:var(--accent)}
+.s-desc{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6}
+.s-desc strong{color:var(--text)}
+.save-btn{width:100%;padding:12px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;border:none;cursor:pointer;margin-top:8px;-webkit-appearance:none}
+.save-btn:active{opacity:.8}
+.s-status{font-size:11px;color:var(--green);padding:4px 0;display:none}
+
+/* ALERTS */
+.alert-item{background:var(--surface);border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.al-info{flex:1}
+.al-ticker{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.al-desc{font-size:10px;color:var(--muted);margin-top:2px}
+.al-toggle{width:42px;height:24px;background:var(--surface2);border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;border:1px solid var(--border);transition:background .2s}
+.al-toggle.on{background:var(--accent)}
+.al-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s}
+.al-toggle.on::after{transform:translateX(18px);background:#0a0c0f}
+.al-rm{color:var(--muted);cursor:pointer;font-size:18px;padding:0 2px;line-height:1}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.f-input{width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;-webkit-appearance:none;border-radius:0}
+.f-input:focus{outline:none;border-color:var(--accent)}
+.add-btn{width:100%;padding:11px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;-webkit-appearance:none}
+.add-btn:active{background:rgba(200,240,80,.1)}
+
+/* MISC */
+.note{font-size:11px;color:var(--muted);line-height:1.7;padding:12px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px}
+.note strong{color:var(--text)}
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px;font-size:11px;gap:8px}
+.hist-date{color:var(--muted);font-size:10px;flex-shrink:0}
+.doc-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);padding:12px 14px;margin-bottom:8px}
+.doc-item.csv{border-left-color:var(--accent)}
+.doc-item.pdf{border-left-color:var(--blue)}
+.doc-item.dup{border-left-color:var(--warn);background:rgba(240,160,80,0.05)}
+.doc-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.doc-icon{font-size:18px;flex-shrink:0}
+.doc-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-date{font-size:10px;color:var(--muted);flex-shrink:0}
+.doc-del{color:var(--muted);cursor:pointer;font-size:18px;padding:0 2px;line-height:1;flex-shrink:0}
+.doc-del:active{color:var(--red)}
+.doc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.doc-tag{font-size:9px;letter-spacing:0.08em;padding:2px 7px;background:var(--surface2);color:var(--muted)}
+.doc-tag.good{background:rgba(74,222,128,0.12);color:var(--green)}
+.doc-tag.info{background:rgba(80,200,240,0.12);color:var(--blue)}
+.doc-tag.warn{background:rgba(240,160,80,0.12);color:var(--warn)}
+.doc-detail{font-size:10px;color:var(--muted);line-height:1.7}
+.doc-detail strong{color:var(--text)}
+.dup-warn{font-size:10px;color:var(--warn);margin-top:4px}
+.doc-lib-empty{color:var(--muted);font-size:11px;padding:20px;text-align:center;background:var(--surface);border:1px solid var(--border)}
+/* Risk tab */
+.risk-score-ring{text-align:center;padding:20px 0}
+.risk-score-num{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;line-height:1}
+.risk-score-label{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:0.1em;text-transform:uppercase}
+.risk-meter{height:8px;background:var(--surface2);margin:16px 0 8px;position:relative;overflow:hidden}
+.risk-meter-fill{height:100%;transition:width 1s ease}
+.risk-item{background:var(--surface);border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.risk-item-label{font-size:11px;color:var(--muted)}
+.risk-item-label strong{color:var(--text);display:block;margin-bottom:2px}
+.risk-item-score{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+/* Watchlist */
+.watch-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.watch-item.up{border-left-color:var(--green)}
+.watch-item.dn{border-left-color:var(--red)}
+.watch-ticker{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.watch-price{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;text-align:right}
+.watch-chg{font-size:10px;text-align:right;margin-top:2px}
+.watch-rm{font-size:16px;color:var(--muted);cursor:pointer;padding:0 2px;justify-self:end}
+/* News */
+.news-cat-btn{padding:6px 14px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+.news-cat-btn.active{background:var(--warn);color:#0a0c0f;border-color:var(--warn);font-weight:600}
+.news-card{background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:10px;cursor:pointer;transition:background .15s;text-decoration:none;display:block}
+.news-card:active{background:var(--surface2)}
+.news-source{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--warn);margin-bottom:6px}
+.news-headline{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:6px}
+.news-summary{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px}
+.news-meta{font-size:10px;color:var(--muted);display:flex;justify-content:space-between}
+.news-loading{text-align:center;padding:30px;color:var(--muted);font-size:11px}
+.sub-tabs{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.sub-tabs::-webkit-scrollbar{display:none}
+.sub-tab{padding:7px 14px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap;-webkit-appearance:none;flex-shrink:0}
+.sub-tab.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
+.sub-page{display:none}.sub-page.active{display:block}
+#installBanner{background:linear-gradient(135deg,rgba(200,240,80,.08),rgba(80,200,240,.08));border:1px solid var(--accent);padding:12px 14px;margin-bottom:16px;display:none;align-items:center;gap:10px}
+#installBanner.show{display:flex}
+.ib-text{flex:1;font-size:11px;color:var(--text);line-height:1.5}
+.ib-btn{padding:8px 14px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;-webkit-appearance:none;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ONBOARDING (shown on first launch) -->
+<div id="onboarding">
+  <div class="ob-logo">₤</div>
+  <div class="ob-title">ISA <span>Tracker</span></div>
+  <div class="ob-sub">Your personal Freetrade ISA dashboard. Upload your activity export and get instant analysis of your portfolio, fees, mistakes and wins.</div>
+  <div class="ob-steps">
+    <div class="ob-step"><div class="ob-step-num">1</div><div class="ob-step-text"><strong>Export from Freetrade</strong><br>Profile → Statements → Activity Feed Export</div></div>
+    <div class="ob-step"><div class="ob-step-num">2</div><div class="ob-step-text"><strong>Upload your CSV</strong><br>Drop it in the Upload tab — we read it on your device</div></div>
+    <div class="ob-step"><div class="ob-step-num">3</div><div class="ob-step-text"><strong>Get your analysis</strong><br>AI breaks down your portfolio, fees, wins and mistakes</div></div>
+  </div>
+  <button class="ob-btn" onclick="dismissOnboarding()">Get Started →</button>
+  <div class="ob-skip" onclick="dismissOnboarding()">I'll set up later</div>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div>
+    <div class="tb-title">ISA <span>Tracker</span></div>
+    <div class="tb-sub" id="topbarSub">Upload your data to begin</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div id="portfolioValueBadge" style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--accent);display:none"></div>
+    <button onclick="showPage('settings',null)" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;line-height:1">⚙️</button>
+  </div>
+</div>
+
+<div id="scrollArea">
+
+  <!-- ══ HOME ══ -->
+  <div class="page active" id="page-home">
+
+    <div id="installBanner">
+      <div class="ib-text"><strong>Install as app</strong> — works offline, lives on your home screen</div>
+      <button class="ib-btn" id="installBtn">Install</button>
+    </div>
+
+    <!-- No data state -->
+    <div id="home-empty">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No data yet</div>
+        <div class="empty-sub">Upload your Freetrade activity CSV to see your portfolio dashboard, fee analysis, and personalised insights.</div>
+        <button class="empty-btn" onclick="showPage('upload',document.querySelectorAll('.nav-item')[3])">Upload Data →</button>
+      </div>
+      <div class="note">
+        <strong>How to export from Freetrade:</strong><br>
+        App → Profile → Statements → Activity Feed Export → choose All Time → Export CSV
+      </div>
+    </div>
+
+    <!-- Data loaded state -->
+    <div id="home-data" style="display:none">
+      <div class="page-title" id="home-title">Portfolio</div>
+      <div class="page-sub" id="home-sub">ISA · Freetrade</div>
+
+      <div class="cards" id="home-cards">
+        <div class="card accent card-full">
+          <div class="card-label">Latest Portfolio Value</div>
+          <div class="card-val" id="h-portVal">—</div>
+          <div class="card-sub" id="h-portSub">from your last statement</div>
+        </div>
+        <div class="card green">
+          <div class="card-label">Net Profit</div>
+          <div class="card-val" id="h-profit">—</div>
+          <div class="card-sub up">After all fees</div>
+        </div>
+        <div class="card blue">
+          <div class="card-label">Dividends</div>
+          <div class="card-val" id="h-divs">—</div>
+          <div class="card-sub">Total received</div>
+        </div>
+        <div class="card warn">
+          <div class="card-label">Total Fees</div>
+          <div class="card-val" id="h-fees">—</div>
+          <div class="card-sub dn">All years combined</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Net Invested</div>
+          <div class="card-val" id="h-netIn">—</div>
+          <div class="card-sub" id="h-netInSub">deposits minus withdrawals</div>
+        </div>
+      </div>
+
+      <div class="sec-head">Portfolio Growth</div>
+      <div class="chart-box">
+        <div class="chart-box-title">Value Over Time <span>from statements</span></div>
+        <canvas id="growthChart" height="140"></canvas>
+      </div>
+
+      <div class="sec-head">Cash Flow</div>
+      <div class="bar-rows" id="cashFlowBars"></div>
+
+      <div class="sec-head">Annual Fees</div>
+      <div class="chart-box">
+        <div class="chart-box-title">Fees by Year</div>
+        <canvas id="feesChart" height="140"></canvas>
+      </div>
+
+      <div class="sec-head">Holdings Mix</div>
+      <div class="chart-box">
+        <canvas id="mixChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LIVE ══ -->
+  <div class="page" id="page-live">
+    <div class="page-title">Live Prices</div>
+    <div class="page-sub" id="live-sub">Tap refresh to load quotes</div>
+
+    <div class="note" id="live-nokey" style="border-color:var(--warn);display:none">
+      ⚠️ <strong>Finnhub API key needed.</strong> Go to ⚙️ Settings → add your free key from finnhub.io
+    </div>
+    <div class="note" id="live-nodata" style="border-color:var(--blue);display:none">
+      ℹ️ <strong>No holdings found.</strong> Upload your activity CSV first so we know what you hold.
+    </div>
+
+    <div class="fx-bar">
+      <span>GBP/USD: <strong id="fxVal">—</strong></span>
+      <span style="font-size:10px;color:var(--muted)" id="fxTime">not loaded</span>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadLivePrices()">
+        <span id="refreshIcon">↻</span> Refresh
+      </button>
+    </div>
+
+    <div class="live-status" id="liveStatus"></div>
+
+    <div class="cards">
+      <div class="card accent card-full">
+        <div class="card-label">Total Live Value</div>
+        <div class="card-val" id="ls-total">—</div>
+        <div class="card-sub" id="ls-totalSub">load prices to update</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Cost Basis</div>
+        <div class="card-val" id="ls-cost">—</div>
+        <div class="card-sub">what you paid</div>
+      </div>
+      <div class="card" id="ls-pnlCard">
+        <div class="card-label">Unrealised P&L</div>
+        <div class="card-val" id="ls-pnl">—</div>
+        <div class="card-sub" id="ls-pnlPct">vs cost basis</div>
+      </div>
+      <div class="card" id="ls-winCard">
+        <div class="card-label">Best Performer</div>
+        <div class="card-val" id="ls-win">—</div>
+        <div class="card-sub" id="ls-winSub">—</div>
+      </div>
+      <div class="card" id="ls-loseCard">
+        <div class="card-label">Weakest</div>
+        <div class="card-val" id="ls-lose">—</div>
+        <div class="card-sub" id="ls-loseSub">—</div>
+      </div>
+    </div>
+
+    <div class="sec-head">Holdings</div>
+    <div id="holdingsList"><div style="color:var(--muted);font-size:11px;padding:20px 0;text-align:center">Tap Refresh to load live prices</div></div>
+
+    <div class="note" style="margin-top:8px">
+      <strong>Live prices via Finnhub free tier</strong> — US stocks (MSFT, NVDA, GOOGL, AMZN, LLY) fetch live prices. LSE-listed ETFs (VUSA, EQQQ, VWRP) show cost price only — live LSE data requires a paid Finnhub plan. GBP/USD rate fetched from a separate free source. Positions calculated from your uploaded CSV.
+    </div>
+  </div>
+
+  <!-- ══ ANALYSIS ══ -->
+  <div class="page" id="page-analysis">
+    <div class="page-title">Analysis</div>
+    <div class="page-sub">AI-powered insights from your data</div>
+
+    <div id="analysis-empty">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No analysis yet</div>
+        <div class="empty-sub">Upload your Freetrade CSV and tap "Analyse with AI" to get personalised insights about your mistakes, wins, and what to do next.</div>
+        <button class="empty-btn" onclick="showPage('upload',document.querySelectorAll('.nav-item')[3])">Upload & Analyse →</button>
+      </div>
+    </div>
+
+    <div id="analysis-data" style="display:none">
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSub('ai',this)">AI Report</button>
+        <button class="sub-tab" onclick="showSub('mistakes',this)">Mistakes</button>
+        <button class="sub-tab" onclick="showSub('wins',this)">Wins</button>
+        <button class="sub-tab" onclick="showSub('improve',this)">Improve</button>
+        <button class="sub-tab" onclick="showSub('costs',this)">Costs</button>
+      </div>
+
+      <!-- AI REPORT -->
+      <div class="sub-page active" id="sub-ai">
+        <div class="ai-box" id="savedAiBox" style="display:block">
+          <div class="ai-box-title">✦ Latest AI Analysis <span id="savedAiDate" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);font-weight:400;margin-left:auto"></span></div>
+          <div class="ai-content" id="savedAiContent">
+            <div style="color:var(--muted);font-size:11px">No analysis yet — upload your CSV and tap Analyse with AI.</div>
+          </div>
+        </div>
+        <div class="note">Re-run the analysis any time from the 📤 Upload tab after adding new data.</div>
+      </div>
+
+      <!-- MISTAKES -->
+      <div class="sub-page" id="sub-mistakes">
+        <div id="mistakesContent"><div style="color:var(--muted);font-size:11px;padding:10px 0">Upload data to generate insights.</div></div>
+        <div class="chart-box" id="mistakeChartBox" style="display:none">
+          <div class="chart-box-title">Trading Patterns <span>buys vs sells by month</span></div>
+          <canvas id="activityChart" height="150"></canvas>
+        </div>
+      </div>
+
+      <!-- WINS -->
+      <div class="sub-page" id="sub-wins">
+        <div id="winsContent"><div style="color:var(--muted);font-size:11px;padding:10px 0">Upload data to generate insights.</div></div>
+      </div>
+
+      <!-- IMPROVE -->
+      <div class="sub-page" id="sub-improve">
+        <div id="improveContent"><div style="color:var(--muted);font-size:11px;padding:10px 0">Upload data to generate insights.</div></div>
+        <div class="chart-box" id="projChartBox" style="display:none">
+          <div class="chart-box-title">Growth Projection <span>£500/month · 8% avg</span></div>
+          <canvas id="projChart" height="150"></canvas>
+        </div>
+      </div>
+
+      <!-- COSTS -->
+      <div class="sub-page" id="sub-costs">
+        <div id="costsContent"><div style="color:var(--muted);font-size:11px;padding:10px 0">Upload data to generate insights.</div></div>
+        <div class="chart-box" id="feeChartBox" style="display:none">
+          <div class="chart-box-title">Cumulative Fees Paid</div>
+          <canvas id="cumFeeChart" height="140"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ UPLOAD ══ -->
+  <div class="page" id="page-upload">
+    <div class="page-title">Upload</div>
+    <div class="page-sub">Update your data quarterly</div>
+
+    <div class="note" id="upload-nokey" style="border-color:var(--warn);display:none">
+      ⚠️ <strong>Anthropic API key needed for AI analysis.</strong> Go to ⚙️ Settings to add it. You can still upload to update your portfolio stats without it.
+    </div>
+
+    <div class="drop-zone" id="dropZone"
+         onclick="document.getElementById('fileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" multiple accept=".csv,.pdf" onchange="handleFiles(this.files)" style="display:none">
+      <div class="dz-icon">📂</div>
+      <div class="dz-title">Drop Freetrade exports here</div>
+      <div class="dz-sub">
+        <strong>activity-feed-export.csv</strong> — trades, dividends, deposits<br>
+        <strong>Annual Costs & Charges PDFs</strong> — updates portfolio values, fee charts<br>
+        Upload all years at once for full history · Files read on your device only
+      </div>
+    </div>
+
+    <div id="fileQueue"></div>
+
+    <button class="process-btn" id="processBtn" onclick="processUploads()" disabled>
+      ✦ Update Portfolio + Analyse with AI
+    </button>
+
+    <div class="ai-box" id="aiBox">
+      <div class="ai-box-title">
+        ✦ AI Analysis
+        <span id="aiSpinner" style="display:none"><span class="spin">↻</span></span>
+        <span id="aiTs" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);font-weight:400"></span>
+      </div>
+      <div class="ai-content" id="aiContent">
+        <span class="typing-cursor" id="typingCursor" style="display:none"></span>
+      </div>
+    </div>
+
+    <div id="uploadHistSection">
+      <div class="sec-head" style="margin-top:8px">
+        Document Library
+        <span id="docLibCount" style="font-size:9px;padding:2px 7px;background:var(--surface2);color:var(--muted);font-family:'DM Mono',monospace;font-weight:400;letter-spacing:0">0 files</span>
+      </div>
+      <div class="note" style="margin-bottom:10px">All files that have been processed and are contributing data to your analysis. Delete duplicates or old files you no longer want included.</div>
+      <div id="docLibrary"></div>
+    </div>
+
+    <div class="sec-head" style="margin-top:8px">Manage Data</div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="resetData()" style="flex:1;padding:11px;background:transparent;border:1px solid var(--red);color:var(--red);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;-webkit-appearance:none;min-width:140px">🗑 Clear All Data</button>
+      <button onclick="showPage('settings',document.querySelectorAll('.nav-item')[4])" style="flex:1;padding:11px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;-webkit-appearance:none;min-width:140px">⚙️ Settings</button>
+    </div>
+
+    <div class="sec-head">How to export from Freetrade</div>
+    <div class="note">
+      <strong>Activity CSV (required):</strong><br>
+      App → Profile → Statements → Activity Feed Export → All Time → Export<br><br>
+      <strong>Annual Cost PDFs (optional, improves fee analysis):</strong><br>
+      App → Profile → Documents → Annual Costs & Charges → download each year<br><br>
+      Upload quarterly for the most up-to-date analysis.
+    </div>
+  </div>
+
+  <!-- ══ RISK & TRADING ══ -->
+  <div class="page" id="page-risk">
+    <div class="page-title">Risk <span style="color:var(--warn)">⚡</span></div>
+    <div class="page-sub">Portfolio risk · Trading opportunities · Market news</div>
+
+    <!-- Sub tabs -->
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="showSub('riskprofile',this)">Risk Profile</button>
+      <button class="sub-tab" onclick="showSub('watchlist',this)">Watchlist</button>
+      <button class="sub-tab" onclick="showSub('news',this);loadNews()">Market News</button>
+      <button class="sub-tab" onclick="showSub('daytrading',this)">Day Trading Tips</button>
+    </div>
+
+    <!-- RISK PROFILE -->
+    <div class="sub-page active" id="sub-riskprofile">
+      <div class="sec-head">Your Portfolio Risk Score</div>
+      <div id="riskScoreArea">
+        <div class="empty-state" style="padding:24px">
+          <div class="empty-icon">📊</div>
+          <div class="empty-title">Upload your CSV first</div>
+          <div class="empty-sub">We need your portfolio data to calculate your risk score.</div>
+        </div>
+      </div>
+
+      <div class="sec-head">Risk Breakdown</div>
+      <div id="riskBreakdown">
+        <div style="color:var(--muted);font-size:11px;padding:10px 0">Upload data to see breakdown.</div>
+      </div>
+
+      <div class="sec-head">What Your Risk Profile Means</div>
+      <div id="riskMeaning">
+        <div style="color:var(--muted);font-size:11px;padding:10px 0">Upload data to see personalised insights.</div>
+      </div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div class="sub-page" id="sub-watchlist">
+      <div class="note">
+        <strong>Active Trading Watchlist</strong> — stocks and ETFs worth watching for short-term opportunities. Requires your Finnhub API key for live prices. These are not recommendations — always do your own research.
+      </div>
+
+      <!-- Add to watchlist -->
+      <div class="settings-row" style="margin-bottom:12px">
+        <div class="s-label">Add Ticker</div>
+        <div style="display:flex;gap:8px">
+          <input class="s-input" type="text" id="watchlistInput" placeholder="e.g. TSLA, NVDA, AAPL…" style="flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter')addToWatchlist()">
+          <button onclick="addToWatchlist()" style="padding:10px 16px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;border:none;cursor:pointer;flex-shrink:0">+ Add</button>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="sec-head" style="margin:0">Your Watchlist</div>
+        <button onclick="refreshWatchlist()" style="font-size:10px;padding:5px 12px;background:transparent;border:1px solid var(--blue);color:var(--blue);font-family:'DM Mono',monospace;letter-spacing:0.08em;cursor:pointer;-webkit-appearance:none">↻ Refresh Prices</button>
+      </div>
+      <div id="watchlistItems">
+        <div style="color:var(--muted);font-size:11px;padding:10px 0">No stocks in watchlist yet. Add some above.</div>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div class="sub-page" id="sub-news">
+      <div class="note" id="newsKeyNotice" style="border-color:var(--warn);display:none">
+        ⚠️ <strong>Finnhub API key needed</strong> for market news. Add it in ⚙️ Settings.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="news-cat-btn active" onclick="setNewsCategory('general',this)">General</button>
+        <button class="news-cat-btn" onclick="setNewsCategory('forex',this)">Forex</button>
+        <button class="news-cat-btn" onclick="setNewsCategory('crypto',this)">Crypto</button>
+        <button class="news-cat-btn" onclick="setNewsCategory('merger',this)">M&A</button>
+      </div>
+      <div id="newsFeed">
+        <div style="color:var(--muted);font-size:11px;text-align:center;padding:30px 0">Tap a category to load news</div>
+      </div>
+    </div>
+
+    <!-- DAY TRADING TIPS -->
+    <div class="sub-page" id="sub-daytrading">
+      <div class="note" style="border-color:var(--red)">
+        ⚠️ <strong>Important:</strong> Day trading is high risk. Most retail day traders lose money. The tips below are educational — not financial advice. Never trade more than you can afford to lose, and never day trade within your ISA as losses cannot be offset against gains.
+      </div>
+
+      <div class="sec-head">Key Day Trading Concepts</div>
+      <div class="insight b">
+        <div class="i-icon">📈</div>
+        <div>
+          <div class="i-title">Momentum Trading</div>
+          <div class="i-body">Buy stocks that are trending strongly upward with high volume. Look for stocks up 5%+ in pre-market. Use a stop-loss at 2% below your entry. Exit when momentum stalls. <strong>Best for:</strong> volatile US stocks (NVDA, TSLA, MSTR).</div>
+        </div>
+      </div>
+      <div class="insight g">
+        <div class="i-icon">📉</div>
+        <div>
+          <div class="i-title">Mean Reversion</div>
+          <div class="i-body">Buy when a quality stock drops sharply on no news (5–10% intraday). The price tends to bounce back. Set a tight stop-loss. <strong>Best for:</strong> large-cap quality stocks like MSFT, AAPL, GOOGL that you already know well.</div>
+        </div>
+      </div>
+      <div class="insight y">
+        <div class="i-icon">📰</div>
+        <div>
+          <div class="i-title">News Catalyst Trading</div>
+          <div class="i-body">Trade around earnings, FDA approvals, M&A announcements. Check the Market News tab for catalysts. <strong>Watch:</strong> Pfizer, AstraZeneca for trial results. Apple for product launches. Enter pre-announcement, exit on the news.</div>
+        </div>
+      </div>
+      <div class="insight r">
+        <div class="i-icon">🛑</div>
+        <div>
+          <div class="i-title">Risk Rules — Never Break These</div>
+          <div class="i-body">
+            <strong>1% Rule</strong> — never risk more than 1% of your trading capital on a single trade<br>
+            <strong>Stop-loss always</strong> — set it before you enter, never move it down<br>
+            <strong>No ISA</strong> — day trade in a separate general account, not your ISA<br>
+            <strong>3 losses = stop</strong> — if you lose 3 trades in a row, stop for the day
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-head">Your Holdings as Trading Candidates</div>
+      <div id="tradingCandidates">
+        <div style="color:var(--muted);font-size:11px;padding:10px 0">Upload your CSV to see which of your holdings have day trading characteristics.</div>
+      </div>
+
+      <div class="sec-head">Suggested Trading Watchlist</div>
+      <div class="insight b">
+        <div class="i-icon">💡</div>
+        <div>
+          <div class="i-title">High-Volatility Stocks Worth Watching</div>
+          <div class="i-body">
+            <strong>NVDA</strong> — AI leader, moves 3–8% on earnings/news. You already know this stock.<br>
+            <strong>TSLA</strong> — extremely volatile, news-driven, wide spreads. High risk/reward.<br>
+            <strong>MSTR</strong> — Bitcoin proxy, huge daily swings. For experienced traders only.<br>
+            <strong>ARM</strong> — chip designer, volatile around earnings and AI news cycles.<br>
+            <strong>COIN</strong> — crypto market proxy, you've held this before. Moves with BTC.<br>
+            <strong>LLY</strong> — you hold this. Pharma stocks move sharply on trial results.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="page" id="page-settings">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">API keys & price alerts</div>
+
+    <div class="sec-head">Anthropic API Key</div>
+    <div class="settings-row">
+      <div class="s-label">Key (for AI Analysis)</div>
+      <input class="s-input" type="password" id="anthropicKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="s-desc">
+        Powers the "Analyse with AI" feature. Get a free key at <strong>console.anthropic.com</strong> — sign up, add $5 credit, create a key. Each analysis costs ~$0.03. Stored only on this device.
+      </div>
+      <button class="save-btn" onclick="saveKey('anthropic_key','anthropicKeyInput','akStatus')">Save Key</button>
+      <div class="s-status" id="akStatus">✓ Saved</div>
+    </div>
+
+    <div class="sec-head">Finnhub API Key</div>
+    <div class="settings-row">
+      <div class="s-label">Key (for Live Prices)</div>
+      <input class="s-input" type="password" id="finnhubKeyInput" placeholder="Your Finnhub key…" autocomplete="off" spellcheck="false">
+      <div class="s-desc">
+        Powers the live prices tab. Free key at <strong>finnhub.io</strong> — 2 min sign-up, no card needed. 60 calls/minute free tier. Stored only on this device.
+      </div>
+      <button class="save-btn" onclick="saveKey('finnhub_key','finnhubKeyInput','fkStatus')">Save Key</button>
+      <div class="s-status" id="fkStatus">✓ Saved</div>
+    </div>
+
+    <div class="sec-head">Price Alerts</div>
+    <div class="settings-row">
+      <div class="form-grid">
+        <select class="f-input" id="alertTicker">
+          <option value="">Select holding…</option>
+        </select>
+        <select class="f-input" id="alertDir">
+          <option value="above">Rises above £</option>
+          <option value="below">Falls below £</option>
+        </select>
+      </div>
+      <div class="form-grid">
+        <input class="f-input" type="number" id="alertPrice" placeholder="Target price (GBP)" step="0.01">
+        <input class="f-input" type="text" id="alertNote" placeholder="Note (optional)">
+      </div>
+      <button class="add-btn" onclick="addAlert()">+ Add Alert</button>
+    </div>
+    <div id="alertsList"></div>
+
+    <div class="sec-head">Data</div>
+    <div class="settings-row">
+      <div class="s-label">Reset All Data</div>
+      <div class="s-desc">Clears your uploaded portfolio data, analysis, and upload history from this device. Your API keys will be kept.</div>
+      <button class="save-btn" style="background:var(--red);margin-top:8px" onclick="resetData()">Clear Portfolio Data</button>
+    </div>
+
+    <div class="sec-head">About</div>
+    <div class="note">
+      <strong>ISA Tracker</strong> — Freetrade Portfolio Dashboard<br>
+      All data stored locally on your device only<br>
+      Not financial advice · For personal reference only<br><br>
+      <strong>Install on Android:</strong> Open in Chrome → ⋮ → Add to Home Screen<br>
+      <strong>Install on iPhone:</strong> Open in Safari → Share → Add to Home Screen
+    </div>
+  </div>
+
+</div><!-- end scrollArea -->
+
+<!-- BOTTOM NAV -->
+<nav id="bottomNav">
+  <button class="nav-item active" onclick="showPage('home',this)"><span class="nav-icon">📊</span><span class="nav-label">Home</span></button>
+  <button class="nav-item" onclick="showPage('live',this)"><span class="nav-icon">📡</span><span class="nav-label">Live</span></button>
+  <button class="nav-item" onclick="showPage('analysis',this)"><span class="nav-icon">🔍</span><span class="nav-label">Analysis</span></button>
+  <button class="nav-item" onclick="showPage('upload',this)"><span class="nav-icon">📤</span><span class="nav-label">Upload</span></button>
+  <button class="nav-item" onclick="showPage('risk',this)"><span class="nav-icon">⚡</span><span class="nav-label">Risk</span></button>
+</nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── COLOURS ──────────────────────────────────────────────────────
+const C={accent:'#c8f050',blue:'#50c8f0',warn:'#f0a050',red:'#f87171',green:'#4ade80',muted:'#6b7a8d',border:'#1f2830'};
+Chart.defaults.color=C.muted; Chart.defaults.borderColor=C.border;
+Chart.defaults.font.family="'DM Mono', monospace"; Chart.defaults.font.size=10;
+const charts={};
+function mkChart(id,cfg){const el=document.getElementById(id);if(!el)return;if(charts[id]){charts[id].destroy();}charts[id]=new Chart(el,cfg);return charts[id];}
+
+// ── STORAGE HELPERS ───────────────────────────────────────────────
+const LS={
+  get:(k,def=null)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch{return def;}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
+  raw:(k)=>localStorage.getItem(k)||'',
+  setRaw:(k,v)=>localStorage.setItem(k,v)
+};
+
+// ── APP STATE ─────────────────────────────────────────────────────
+// All portfolio data lives here — loaded from localStorage, populated by CSV parsing
+let STATE = LS.get('portfolioState', null);
+
+// ── ONBOARDING ────────────────────────────────────────────────────
+function dismissOnboarding(){
+  document.getElementById('onboarding').style.display='none';
+  LS.set('onboardingDone',true);
+  if(!STATE) showPage('upload', document.querySelectorAll('.nav-item')[3]);
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  if(LS.get('onboardingDone') || STATE){
+    document.getElementById('onboarding').style.display='none';
+  }
+  loadKeys();
+  renderAlerts();
+  renderDocLibrary();
+  checkUploadNotices();
+  if(STATE) renderHome();
+  if(STATE) renderAnalysisTab();
+  populateAlertTickers();
+});
+
+// ── NAVIGATION ────────────────────────────────────────────────────
+let _liveLoaded=false;
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('scrollArea').scrollTop=0;
+  if(name==='live' && !_liveLoaded){_liveLoaded=true; checkLiveNotices();}
+  if(name==='upload') checkUploadNotices();
+  if(name==='home' && STATE) renderHome();
+  if(name==='analysis' && STATE) renderAnalysisTab();
+  if(name==='risk') renderRiskTab();
+}
+function showSub(name,btn){
+  document.querySelectorAll('.sub-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sub-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ── CSV PARSER ────────────────────────────────────────────────────
+// Parses Freetrade activity-feed-export.csv and extracts everything
+function parseFreetradeCsv(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  const rows=lines.slice(1).map(line=>{
+    // Handle commas inside quoted fields
+    const cols=[]; let cur='', inQ=false;
+    for(const ch of line){
+      if(ch==='"'){inQ=!inQ;}
+      else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+      else cur+=ch;
+    }
+    cols.push(cur.trim());
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=cols[i]||'');
+    return obj;
+  });
+
+  // Extract key data
+  const orders=rows.filter(r=>r.Type==='ORDER');
+  const dividends=rows.filter(r=>r.Type==='DIVIDEND');
+  const topups=rows.filter(r=>r.Type==='TOP_UP');
+  const withdrawals=rows.filter(r=>r.Type==='WITHDRAWAL');
+  const interest=rows.filter(r=>r.Type==='INTEREST_FROM_CASH');
+
+  // Totals
+  const totalDeposited=topups.reduce((s,r)=>s+parseFloat(r['Total Amount in Account Currency']||0),0);
+  const totalWithdrawn=withdrawals.reduce((s,r)=>s+parseFloat(r['Total Amount in Account Currency']||0),0);
+  const totalDividends=dividends.reduce((s,r)=>s+parseFloat(r['Dividend Net Distribution Amount']||0),0);
+  const totalInterest=interest.reduce((s,r)=>s+parseFloat(r['Total Amount in Account Currency']||0),0);
+  const totalFxFees=orders.reduce((s,r)=>s+parseFloat(r['FX Fee Amount']||0),0);
+
+  // Buy/sell volumes
+  const buys=orders.filter(r=>r['Buy / Sell']==='BUY');
+  const sells=orders.filter(r=>r['Buy / Sell']==='SELL');
+  const totalBuyValue=buys.reduce((s,r)=>s+Math.abs(parseFloat(r['Total Amount in Account Currency']||0)),0);
+  const totalSellValue=sells.reduce((s,r)=>s+Math.abs(parseFloat(r['Total Amount in Account Currency']||0)),0);
+
+  // Build open positions by tracing all buys/sells
+  const positions={};
+  orders.forEach(r=>{
+    const ticker=r.Ticker||r.Title;
+    const qty=parseFloat(r['Quantity']||0);
+    const amount=Math.abs(parseFloat(r['Total Amount in Account Currency']||0));
+    if(!ticker) return;
+    if(!positions[ticker]) positions[ticker]={name:r.Title,ticker,qty:0,totalCost:0,isin:r.ISIN,currency:'GBP',trades:[]};
+    if(r['Buy / Sell']==='BUY'){
+      positions[ticker].qty+=qty;
+      positions[ticker].totalCost+=amount;
+    } else if(r['Buy / Sell']==='SELL'){
+      // Reduce position proportionally
+      const sellRatio=qty/Math.max(positions[ticker].qty,qty);
+      positions[ticker].totalCost*=(1-sellRatio);
+      positions[ticker].qty-=qty;
+    }
+    positions[ticker].trades.push({date:r.Timestamp,side:r['Buy / Sell'],qty,amount});
+  });
+
+  // Filter to open positions only (qty > 0.0001)
+  const openPositions=Object.values(positions).filter(p=>p.qty>0.0001).map(p=>({
+    ...p,
+    avgCost:p.qty>0?p.totalCost/p.qty:0,
+    ySymbol:guessYSymbol(p.ticker,p.isin),
+    currency:guessCurrency(p.ticker,p.isin)
+  }));
+
+  // Trade history for charts (monthly)
+  const monthlyActivity={};
+  orders.forEach(r=>{
+    const d=new Date(r.Timestamp);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(!monthlyActivity[key]) monthlyActivity[key]={buys:0,sells:0};
+    const amt=Math.abs(parseFloat(r['Total Amount in Account Currency']||0));
+    if(r['Buy / Sell']==='BUY') monthlyActivity[key].buys+=amt;
+    else monthlyActivity[key].sells+=amt;
+  });
+
+  // Deposit/withdrawal history for display
+  const cashFlow=[
+    ...topups.map(r=>({date:r.Timestamp,type:'deposit',amount:parseFloat(r['Total Amount in Account Currency']||0),label:'Top-up'})),
+    ...withdrawals.map(r=>({date:r.Timestamp,type:'withdrawal',amount:parseFloat(r['Total Amount in Account Currency']||0),label:'Withdrawal'}))
+  ].sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  // Dividend breakdown by ticker
+  const divByTicker={};
+  dividends.forEach(r=>{
+    const t=r.Ticker||r.Title;
+    if(!t) return;
+    divByTicker[t]=(divByTicker[t]||0)+parseFloat(r['Dividend Net Distribution Amount']||0);
+  });
+
+  // Most recent date in data
+  const dates=rows.filter(r=>r.Timestamp).map(r=>new Date(r.Timestamp)).filter(d=>!isNaN(d));
+  const latestDate=dates.length?new Date(Math.max(...dates)):new Date();
+
+  return {
+    totalDeposited, totalWithdrawn, totalDividends, totalInterest,
+    totalFxFees, totalBuyValue, totalSellValue,
+    openPositions, monthlyActivity, cashFlow, divByTicker,
+    latestDate: latestDate.toLocaleDateString('en-GB',{month:'short',year:'numeric'}),
+    totalTrades: orders.length,
+    rowCount: rows.length
+  };
+}
+
+// Guess Yahoo/Finnhub symbol from ticker/ISIN
+function guessYSymbol(ticker, isin){
+  if(!ticker) return null;
+  // Known LSE ETFs
+  const lseEtfs=['VUSA','VUAG','VWRP','EQQQ','VMIG','WSLV','GLDW','SSLN','CRUD','3BLR','LQQ3'];
+  if(lseEtfs.includes(ticker)) return ticker+'.L';
+  // Known US stocks
+  const usStocks=['MSFT','NVDA','GOOGL','AMZN','AAPL','LLY','AMD','COIN','GS','TSLA','META','NVDA'];
+  if(usStocks.includes(ticker)) return ticker;
+  // ISIN-based guesses
+  if(isin&&isin.startsWith('GB')) return ticker+'.L';
+  if(isin&&isin.startsWith('IE')) return ticker+'.L';
+  if(isin&&isin.startsWith('US')) return ticker;
+  return null;
+}
+
+function guessCurrency(ticker, isin){
+  const lseEtfs=['VUSA','VUAG','VWRP','EQQQ','VMIG','WSLV','GLDW','SSLN','CRUD','3BLR','LQQ3'];
+  if(lseEtfs.includes(ticker)) return 'GBX';
+  if(isin&&(isin.startsWith('GB')||isin.startsWith('IE'))) return 'GBP';
+  if(isin&&isin.startsWith('US')) return 'USD';
+  return 'GBP';
+}
+
+// ── RENDER HOME ───────────────────────────────────────────────────
+function renderHome(){
+  if(!STATE){
+    document.getElementById('home-empty').style.display='block';
+    document.getElementById('home-data').style.display='none';
+    return;
+  }
+  document.getElementById('home-empty').style.display='none';
+  document.getElementById('home-data').style.display='block';
+
+  const s=STATE;
+  const netIn=s.totalDeposited-s.totalWithdrawn;
+
+  const portVal = s.latestPortfolioValue || null;
+  const totalFees = s.totalFees || s.totalFxFees || 0;
+
+  // Estimate portfolio value from open positions cost basis if no PDF value
+  const estimatedVal = s.openPositions && s.openPositions.length
+    ? s.openPositions.reduce((sum, p) => sum + (p.totalCost||0), 0)
+    : null;
+  const displayVal = portVal || estimatedVal;
+  const isEstimate = !portVal && !!estimatedVal;
+
+  // Profit: use real value if from PDF, estimated if from cost basis
+  const profit = displayVal !== null ? (displayVal - netIn) : null;
+
+  document.getElementById('h-portVal').textContent = displayVal
+    ? '£' + Math.round(displayVal).toLocaleString('en-GB')
+    : '—';
+  document.getElementById('h-portSub').textContent = portVal
+    ? (s.latestStatementDate || 'from last statement')
+    : isEstimate
+      ? 'Estimated from cost basis · Upload PDF for actual value'
+      : 'Upload PDF for value';
+  document.getElementById('h-profit').textContent = profit !== null
+    ? (profit >= 0 ? '+' : '') + fmtGBP(profit) + (isEstimate ? ' (est.)' : '')
+    : '—';
+  document.getElementById('h-divs').textContent = fmtGBP((s.totalDividends||0) + (s.totalInterest||0));
+  document.getElementById('h-fees').textContent = totalFees > 0 ? fmtGBP(totalFees) : 'Upload PDF for fees';
+  document.getElementById('h-netIn').textContent = fmtGBP(netIn);
+  document.getElementById('h-netInSub').textContent = fmtGBP(s.totalDeposited||0) + ' in − ' + fmtGBP(s.totalWithdrawn||0) + ' out';
+
+  // Topbar badge
+  document.getElementById('topbarSub').textContent = (s.userName||'ISA') + ' · ' + (s.latestDate||'');
+  if(displayVal && displayVal > 500){
+    document.getElementById('portfolioValueBadge').textContent = '£' + Math.round(displayVal).toLocaleString();
+    document.getElementById('portfolioValueBadge').style.display = 'block';
+  } else {
+    document.getElementById('portfolioValueBadge').style.display = 'none';
+  }
+
+  // Cash flow bars
+  const cfBars=document.getElementById('cashFlowBars');
+  if(s.cashFlow&&s.cashFlow.length){
+    const maxAmt=Math.max(...s.cashFlow.map(c=>c.amount));
+    cfBars.innerHTML=s.cashFlow.map(c=>`
+      <div class="bar-r">
+        <div class="bar-lbl"><span>${new Date(c.date).toLocaleDateString('en-GB',{month:'short',year:'numeric'})} — ${c.label}</span><span style="color:${c.type==='withdrawal'?'var(--red)':'var(--text)'}">${c.type==='withdrawal'?'−':''}${fmtGBP(c.amount)}</span></div>
+        <div class="bar-track"><div class="bar-fill ${c.type==='withdrawal'?'bf-r':'bf-a'}" style="width:${(c.amount/maxAmt*100).toFixed(1)}%"></div></div>
+      </div>`).join('');
+  } else {
+    cfBars.innerHTML='<div style="color:var(--muted);font-size:11px">No deposit/withdrawal data found</div>';
+  }
+
+  // Growth chart (from statement data if available)
+  if(s.portfolioHistory&&s.portfolioHistory.length>1){
+    mkChart('growthChart',{type:'line',data:{
+      labels:s.portfolioHistory.map(p=>p.date),
+      datasets:[{label:'Value (£)',data:s.portfolioHistory.map(p=>p.value),borderColor:C.accent,backgroundColor:'rgba(200,240,80,0.08)',fill:true,tension:0.4,pointBackgroundColor:C.accent,pointRadius:4,borderWidth:2}]
+    },options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'£'+v.toLocaleString()},grid:{color:C.border}},x:{grid:{color:C.border}}}}});
+  } else {
+    document.querySelector('#page-home .chart-box').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px">Upload Annual Cost PDFs to see portfolio growth over time</div>';
+  }
+
+  // Fees chart
+  if(s.feeHistory&&s.feeHistory.length){
+    mkChart('feesChart',{type:'bar',data:{
+      labels:s.feeHistory.map(f=>f.year),
+      datasets:[
+        {label:'Subscription',data:s.feeHistory.map(f=>f.subscription||0),backgroundColor:C.blue,stack:'a'},
+        {label:'FX Fees',data:s.feeHistory.map(f=>f.fx||0),backgroundColor:C.warn,stack:'a'},
+        {label:'Other',data:s.feeHistory.map(f=>f.other||0),backgroundColor:C.muted,stack:'a'}
+      ]
+    },options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:8}}},scales:{x:{stacked:true,grid:{color:C.border}},y:{stacked:true,ticks:{callback:v=>'£'+v},grid:{color:C.border}}}}});
+  } else if(s.totalFxFees>0){
+    // Rough fee breakdown from CSV data
+    mkChart('feesChart',{type:'bar',data:{
+      labels:['All Time'],
+      datasets:[
+        {label:'FX Fees',data:[s.totalFxFees],backgroundColor:C.warn},
+        {label:'Other',data:[totalFees-s.totalFxFees],backgroundColor:C.muted}
+      ]
+    },options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:8}}},scales:{x:{grid:{color:C.border}},y:{ticks:{callback:v=>'£'+v},grid:{color:C.border}}}}});
+  }
+
+  // Holdings mix donut
+  if(s.openPositions&&s.openPositions.length){
+    const top=s.openPositions.slice().sort((a,b)=>b.totalCost-a.totalCost).slice(0,8);
+    const colours=[C.accent,C.blue,C.warn,'#a855f7',C.green,'#ec4899','#06b6d4','#f59e0b'];
+    mkChart('mixChart',{type:'doughnut',data:{
+      labels:top.map(p=>p.ticker),
+      datasets:[{data:top.map(p=>p.totalCost),backgroundColor:colours,borderWidth:0,hoverOffset:4}]
+    },options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:10,font:{size:10}}}}}});
+  }
+}
+
+// ── RENDER ANALYSIS ───────────────────────────────────────────────
+function renderAnalysisTab(){
+  if(!STATE) return;
+  document.getElementById('analysis-empty').style.display='none';
+  document.getElementById('analysis-data').style.display='block';
+
+  const s=STATE;
+
+  // Restore saved AI analysis if present
+  const savedAi=LS.get('latestAnalysis',null);
+  if(savedAi){
+    renderAIText(savedAi.text, document.getElementById('savedAiContent'));
+    document.getElementById('savedAiDate').textContent=savedAi.date;
+  }
+
+  // Generate insights from data
+  generateMistakesInsights();
+  generateWinsInsights();
+  generateImproveInsights();
+  generateCostsInsights();
+
+  // Activity chart
+  if(s.monthlyActivity){
+    const months=Object.keys(s.monthlyActivity).sort().slice(-18);
+    mkChart('activityChart',{type:'bar',data:{
+      labels:months.map(m=>{const[y,mo]=m.split('-');return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mo)-1]+"'"+y.slice(2);}),
+      datasets:[
+        {label:'Buys (£)',data:months.map(m=>s.monthlyActivity[m].buys),backgroundColor:'rgba(74,222,128,0.6)'},
+        {label:'Sells (£)',data:months.map(m=>s.monthlyActivity[m].sells),backgroundColor:'rgba(248,113,113,0.6)'}
+      ]
+    },options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:8}}},scales:{x:{grid:{color:C.border},ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'£'+v},grid:{color:C.border}}}}});
+    document.getElementById('mistakeChartBox').style.display='block';
+  }
+
+  // Projection chart
+  const startVal=s.latestPortfolioValue||5000;
+  const proj=(rate,mo)=>{let v=startVal;const pts=[v];for(let i=0;i<mo;i++){v=v*(1+rate/12)+500;pts.push(Math.round(v));}return pts;};
+  mkChart('projChart',{type:'line',data:{
+    labels:['Now','1yr','2yr','3yr','5yr','7yr','10yr'],
+    datasets:[
+      {label:'Conservative 5%',data:proj(0.05,120).filter((_,i)=>[0,12,24,36,60,84,120].includes(i)),borderColor:C.muted,borderDash:[4,4],fill:false,tension:0.4,pointRadius:2},
+      {label:'Base 8%',data:proj(0.08,120).filter((_,i)=>[0,12,24,36,60,84,120].includes(i)),borderColor:C.accent,backgroundColor:'rgba(200,240,80,0.06)',fill:true,tension:0.4,pointRadius:3,borderWidth:2}
+    ]
+  },options:{responsive:true,plugins:{legend:{labels:{boxWidth:8,padding:8,font:{size:9}}}},scales:{y:{ticks:{callback:v=>'£'+(v>=1000?(v/1000).toFixed(0)+'k':v)},grid:{color:C.border}},x:{grid:{color:C.border}}}}});
+  document.getElementById('projChartBox').style.display='block';
+
+  // Cumulative fees
+  if(s.feeHistory&&s.feeHistory.length){
+    let cum=0;
+    const cumData=s.feeHistory.map(f=>{cum+=f.total||0;return Math.round(cum*100)/100;});
+    mkChart('cumFeeChart',{type:'line',data:{
+      labels:s.feeHistory.map(f=>f.year),
+      datasets:[{label:'Cumulative Fees',data:cumData,borderColor:C.red,backgroundColor:'rgba(248,113,113,0.08)',fill:true,tension:0.4,pointBackgroundColor:C.red,pointRadius:4,borderWidth:2}]
+    },options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'£'+v},grid:{color:C.border}},x:{grid:{color:C.border}}}}});
+    document.getElementById('feeChartBox').style.display='block';
+  }
+}
+
+function generateMistakesInsights(){
+  const s=STATE; if(!s) return;
+  const el=document.getElementById('mistakesContent');
+  const insights=[];
+
+  // Large withdrawal detection
+  if(s.totalWithdrawn>1000){
+    insights.push({cls:'r',icon:'💸',title:`Large withdrawal: ${fmtGBP(s.totalWithdrawn)}`,body:`You withdrew ${fmtGBP(s.totalWithdrawn)} from your ISA. Withdrawals reset compound growth. If this remained invested at 8% annually, it could be worth significantly more over time.`});
+  }
+
+  // High FX fees
+  if(s.totalFxFees>50){
+    insights.push({cls:'y',icon:'💱',title:`FX fees: ${fmtGBP(s.totalFxFees)} total`,body:`You've paid ${fmtGBP(s.totalFxFees)} in FX fees from trading USD-denominated stocks. Each USD trade costs 0.59%. Switching to GBP-priced ETFs (VWRP, VUAG) for broad exposure would eliminate these entirely.`});
+  }
+
+  // Frequent trading detection
+  const s_count=s.openPositions?.length||0;
+  if(s.totalTrades>30){
+    insights.push({cls:'y',icon:'🔄',title:`High trading frequency: ${s.totalTrades} trades`,body:`You've made ${s.totalTrades} trades in total. More frequent trading means more FX fees and more opportunities to buy back higher after selling. Evidence shows holding beats trading for most retail investors.`});
+  }
+
+  // Leveraged ETF detection
+  const levHoldings=s.openPositions?.filter(p=>['3BLR','LQQ3','CRUD'].includes(p.ticker))||[];
+  if(levHoldings.length){
+    insights.push({cls:'r',icon:'⚡',title:`Leveraged/commodity ETFs detected`,body:`You hold ${levHoldings.map(p=>p.ticker).join(', ')}. Leveraged ETFs suffer from volatility decay and are not suitable for long-term ISA investing. Consider replacing with core index ETFs.`});
+  }
+
+  if(!insights.length){
+    insights.push({cls:'g',icon:'✅',title:'No major red flags detected',body:'Based on your activity data, no obvious costly patterns were found. Upload your annual cost PDFs for deeper fee analysis.'});
+  }
+
+  el.innerHTML=insights.map(i=>`
+    <div class="insight ${i.cls}">
+      <div class="i-icon">${i.icon}</div>
+      <div><div class="i-title">${i.title}</div><div class="i-body">${i.body}</div></div>
+    </div>`).join('');
+}
+
+function generateWinsInsights(){
+  const s=STATE; if(!s) return;
+  const el=document.getElementById('winsContent');
+  const insights=[];
+
+  insights.push({cls:'g',icon:'🏦',title:'You\'re investing consistently',body:`You've made ${s.totalTrades} trades and deposited ${fmtGBP(s.totalDeposited)} into your ISA. Most people never start. Consistency over time is the single most powerful factor in building wealth.`});
+
+  insights.push({cls:'g',icon:'🛡️',title:'ISA wrapper — all profits tax-free',body:'Every capital gain and dividend inside your ISA is completely free from UK CGT and Income Tax. Over decades this could save you tens of thousands of pounds compared to a general investment account.'});
+
+  if(s.totalDividends>0){
+    insights.push({cls:'g',icon:'💰',title:`${fmtGBP(s.totalDividends)} in dividends received`,body:`You've earned ${fmtGBP(s.totalDividends)} in dividends. This is passive income that compounds over time. As your holdings grow, so do the dividends.`});
+  }
+
+  const vwrp=s.openPositions?.find(p=>p.ticker==='VWRP');
+  if(vwrp){
+    insights.push({cls:'g',icon:'🌍',title:'You hold VWRP — excellent choice',body:'VWRP (Vanguard FTSE All-World Acc) is widely considered the best single ISA holding for long-term investors. 3,500+ companies, 50 countries, GBP-priced, auto-reinvests dividends, 0.22% annual fee.'});
+  }
+
+  el.innerHTML=insights.map(i=>`
+    <div class="insight ${i.cls}">
+      <div class="i-icon">${i.icon}</div>
+      <div><div class="i-title">${i.title}</div><div class="i-body">${i.body}</div></div>
+    </div>`).join('');
+}
+
+function generateImproveInsights(){
+  const s=STATE; if(!s) return;
+  const el=document.getElementById('improveContent');
+  const insights=[];
+
+  insights.push({cls:'g',icon:'🎯',title:'Suggested simple portfolio structure',body:'<strong>70% VWRP</strong> — All-World Acc, GBP, no FX fees, auto-reinvests<br><strong>20% VUAG</strong> — S&P 500 Acc, GBP, US growth tilt<br><strong>10% Individual stocks</strong> — your highest conviction picks<br><br>This eliminates most FX fees and reduces decision fatigue.'});
+
+  if(s.totalFxFees>30){
+    insights.push({cls:'b',icon:'💱',title:'Reduce FX fees by switching to GBP ETFs',body:`You've paid ${fmtGBP(s.totalFxFees)} in FX fees. Every USD stock trade costs 0.59%. GBP-priced ETFs like VWRP and VUAG give you the same market exposure with zero FX fees.`});
+  }
+
+  insights.push({cls:'g',icon:'📅',title:'Set up monthly automatic buying (DCA)',body:'Pound-cost averaging — buying a fixed amount monthly regardless of price — is one of the most evidence-backed strategies for retail investors. It removes emotional timing decisions entirely.'});
+
+  insights.push({cls:'b',icon:'🌱',title:'Use accumulating ETFs (Acc) not distributing (Dis)',body:'Acc ETFs automatically reinvest dividends inside the fund — no FX fee, no manual work. Dis ETFs pay cash dividends which you then need to reinvest, paying fees again. Prefer VUAG over VUSA, VWRP over VWRL.'});
+
+  el.innerHTML=insights.map(i=>`
+    <div class="insight ${i.cls}">
+      <div class="i-icon">${i.icon}</div>
+      <div><div class="i-title">${i.title}</div><div class="i-body" style="font-size:11px;color:var(--muted);line-height:1.7">${i.body}</div></div>
+    </div>`).join('');
+}
+
+function generateCostsInsights(){
+  const s=STATE; if(!s) return;
+  const el=document.getElementById('costsContent');
+
+  const totalFees=s.totalFees||s.totalFxFees||0;
+  el.innerHTML=`
+    <div class="cards" style="margin-bottom:16px">
+      <div class="card warn">
+        <div class="card-label">FX Fees</div>
+        <div class="card-val">${fmtGBP(s.totalFxFees)}</div>
+        <div class="card-sub dn">0.59% per USD trade</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Dividends + Interest</div>
+        <div class="card-val">${fmtGBP(s.totalDividends+s.totalInterest)}</div>
+        <div class="card-sub up">Total received</div>
+      </div>
+      <div class="card card-full">
+        <div class="card-label">Total Fees Tracked</div>
+        <div class="card-val">${fmtGBP(totalFees)}</div>
+        <div class="card-sub dn">Upload annual PDFs for full breakdown</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Trade Type</th><th>Fee</th><th>On £500</th></tr></thead>
+        <tbody>
+          <tr><td>GBP ETF (VWRP, VUSA)</td><td style="color:var(--green)">Free</td><td style="color:var(--green)">£0.00</td></tr>
+          <tr><td>USD stock (MSFT, NVDA…)</td><td style="color:var(--warn)">0.59% FX</td><td style="color:var(--warn)">£2.95</td></tr>
+          <tr><td>US dividend received</td><td style="color:var(--red)">15% withheld</td><td style="color:var(--red)">15% of div</td></tr>
+          <tr><td>Freetrade subscription</td><td style="color:var(--blue)">~£6.49/mo</td><td>Fixed</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── LIVE PRICES ───────────────────────────────────────────────────
+// Finnhub free tier supports: US stocks only (MSFT, NVDA etc)
+// LSE stocks (.L) require paid plan — we show last known price for those
+// GBP/USD rate fetched from free exchangerate-api
+
+function getKey(k){return localStorage.getItem(k)||'';}
+function checkLiveNotices(){
+  document.getElementById('live-nokey').style.display=getKey('finnhub_key')?'none':'block';
+  document.getElementById('live-nodata').style.display=(STATE&&STATE.openPositions?.length)?'none':'block';
+}
+
+let _gbpUsd = null;
+
+// Free GBP/USD rate — no API key needed
+async function fetchGbpUsd(){
+  try {
+    // Try exchangerate-api (free, no key)
+    const r = await fetch('https://open.er-api.com/v6/latest/GBP');
+    if(r.ok){
+      const d = await r.json();
+      if(d.rates?.USD) return d.rates.USD;
+    }
+  } catch(e){}
+  try {
+    // Fallback: frankfurter.app (free, no key)
+    const r = await fetch('https://api.frankfurter.app/latest?from=GBP&to=USD');
+    if(r.ok){
+      const d = await r.json();
+      if(d.rates?.USD) return d.rates.USD;
+    }
+  } catch(e){}
+  return 1.27; // last resort fallback
+}
+
+async function finnhubGet(symbol){
+  const key = getKey('finnhub_key');
+  if(!key) throw new Error('NO_KEY');
+  const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`);
+  if(r.status === 403) throw new Error('403_FORBIDDEN');
+  if(r.status === 401) throw new Error('401_INVALID_KEY');
+  if(!r.ok) throw new Error('HTTP_'+r.status);
+  const d = await r.json();
+  if(!d.c || (d.c===0 && d.pc===0)) throw new Error('NO_DATA');
+  return {price: d.c, prev: d.pc};
+}
+
+async function loadLivePrices(){
+  if(!getKey('finnhub_key')){
+    const st=document.getElementById('liveStatus');
+    st.className='live-status err show';
+    st.textContent='⚠ Add your Finnhub API key in ⚙️ Settings first. Free key at finnhub.io';
+    return;
+  }
+  if(!STATE||!STATE.openPositions?.length){
+    const st=document.getElementById('liveStatus');
+    st.className='live-status err show';
+    st.textContent='⚠ Upload your activity CSV first so we know what you hold.';
+    return;
+  }
+
+  const btn=document.getElementById('refreshBtn');
+  const icon=document.getElementById('refreshIcon');
+  const st=document.getElementById('liveStatus');
+  btn.disabled=true; icon.innerHTML='<span class="spin">↻</span>';
+  st.className='live-status show'; st.textContent='Fetching GBP/USD rate…';
+
+  try {
+    // Step 1: Get GBP/USD from free API (no Finnhub needed)
+    _gbpUsd = await fetchGbpUsd();
+    document.getElementById('fxVal').textContent=`1 GBP = $${_gbpUsd.toFixed(4)}`;
+    document.getElementById('fxTime').textContent=new Date().toLocaleTimeString('en-GB');
+    document.getElementById('live-sub').textContent='Updated '+new Date().toLocaleTimeString('en-GB');
+
+    // Step 2: Only fetch US stocks via Finnhub (free tier)
+    // LSE ETFs (.L) get last-known price — Finnhub free doesn't support them
+    const usPositions = STATE.openPositions.filter(p => p.ySymbol && !p.ySymbol.endsWith('.L'));
+    const lsePositions = STATE.openPositions.filter(p => p.ySymbol && p.ySymbol.endsWith('.L'));
+
+    const prices = {};
+    const fetched = [];
+    const skipped = [];
+    let keyInvalid = false;
+
+    for(const p of usPositions){
+      st.textContent = 'Fetching '+p.ticker+'…';
+      try {
+        prices[p.ySymbol] = await finnhubGet(p.ySymbol);
+        fetched.push(p.ticker);
+        await new Promise(r => setTimeout(r, 110));
+      } catch(e) {
+        if(e.message.includes('403') || e.message.includes('401')){
+          keyInvalid = true;
+          break; // stop trying — key is wrong
+        }
+        skipped.push(p.ticker);
+      }
+    }
+
+    // LSE positions use last known price (purchase price from CSV)
+    lsePositions.forEach(p => {
+      prices[p.ySymbol] = null; // null = use last known
+      skipped.push(p.ticker+' (LSE—free plan)');
+    });
+
+    if(keyInvalid){
+      st.className='live-status err show';
+      st.textContent='✗ Finnhub API key rejected (403/401). Check your key in ⚙️ Settings — make sure you copied it correctly from finnhub.io';
+      btn.disabled=false; icon.innerHTML='↻';
+      return;
+    }
+
+    renderHoldingsList(prices);
+
+    // Build status message
+    const statusParts = [];
+    if(fetched.length) statusParts.push(`✓ Live: ${fetched.join(', ')}`);
+    if(lsePositions.length) statusParts.push(`ℹ Last known price: ${lsePositions.map(p=>p.ticker).join(', ')} (Finnhub free plan = US stocks only)`);
+
+    st.className = lsePositions.length ? 'live-status show' : 'live-status show';
+    st.textContent = statusParts.join(' · ');
+    if(!lsePositions.length) setTimeout(()=>{st.className='live-status';}, 5000);
+
+  } catch(e){
+    st.className='live-status err show';
+    st.textContent='✗ '+e.message;
+  }
+  btn.disabled=false; icon.innerHTML='↻';
+}
+
+function toGBP(p,raw){
+  if(p.currency==='USD') return raw/_gbpUsd;
+  if(p.currency==='GBX') return raw/100;
+  return raw;
+}
+
+function renderHoldingsList(prices){
+  const list=document.getElementById('holdingsList');
+  list.innerHTML='';
+  let totVal=0,totCost=0;
+  const rows=[];
+
+  STATE.openPositions.forEach(p=>{
+    let liveGBP=null,change=null,changePct=null;
+    const isLse = p.ySymbol&&p.ySymbol.endsWith('.L');
+    if(p.manualPrice){
+      liveGBP=p.manualPrice;
+    } else if(p.ySymbol && prices[p.ySymbol] && prices[p.ySymbol]!==null){
+      const q=prices[p.ySymbol];
+      liveGBP=toGBP(p,q.price);
+      if(q.prev){const pg=toGBP(p,q.prev);change=liveGBP-pg;changePct=(change/pg)*100;}
+    } else if(isLse && p.avgCost){
+      // LSE: use avg cost as proxy — no live price available on free plan
+      liveGBP = p.avgCost;
+    }
+    const mktVal=liveGBP!==null?liveGBP*p.qty:null;
+    const pnl=mktVal!==null?mktVal-p.totalCost:null;
+    const pnlPct=(pnl!==null&&p.totalCost>0)?(pnl/p.totalCost*100):null;
+    if(mktVal!==null)totVal+=mktVal;
+    totCost+=p.totalCost;
+    rows.push({p,liveGBP,change,changePct,mktVal,pnl,pnlPct});
+  });
+
+  rows.sort((a,b)=>(b.mktVal||0)-(a.mktVal||0));
+  const s=v=>v>=0?'+':'';
+
+  rows.forEach(({p,liveGBP,change,changePct,mktVal,pnl,pnlPct})=>{
+    const alloc=totVal>0&&mktVal?(mktVal/totVal*100):0;
+    const isLse=p.ySymbol&&p.ySymbol.endsWith('.L');
+    const div=document.createElement('div');
+    div.className='h-row '+(pnl!==null?(pnl>=0?'pos':'neg'):'');
+    div.innerHTML=`
+      <div>
+        <div><span class="h-name">${p.name||p.ticker}</span><span class="h-ticker">${p.ticker}</span></div>
+        <div class="h-meta">${p.qty<1?p.qty.toFixed(5):p.qty.toFixed(3)} shares · avg cost ${fmtGBP(p.avgCost)}${isLse?' · cost price (LSE)':''}</div>
+        ${pnl!==null?`<div class="h-pnl ${pnl>=0?'pnl-pos':'pnl-neg'}">${s(pnl)}${fmtGBP(pnl)} (${s(pnlPct)}${pnlPct.toFixed(1)}%)</div>`:''}
+        <div class="alloc-bar"><div class="alloc-fill" style="width:${Math.min(alloc,100).toFixed(1)}%"></div></div>
+      </div>
+      <div>
+        <div class="h-price">${liveGBP!==null?fmtGBP(liveGBP):'—'}</div>
+        ${change!==null?`<div class="h-chg ${change>=0?'pnl-pos':'pnl-neg'}">${s(change)}${change.toFixed(2)} (${s(changePct)}${changePct.toFixed(2)}%)</div>`:''}
+        ${mktVal!==null?`<div style="font-size:10px;color:var(--muted);margin-top:4px">${fmtGBP(mktVal)}</div>`:''}
+      </div>`;
+    list.appendChild(div);
+  });
+
+  // Summary
+  const totPnl=totVal-totCost,totPct=totCost>0?(totPnl/totCost*100):0;
+  const sc=v=>v>=0?'+':'';
+  document.getElementById('ls-total').textContent=fmtGBP(totVal);
+  document.getElementById('ls-totalSub').textContent='live market value';
+  document.getElementById('ls-cost').textContent=fmtGBP(totCost);
+  document.getElementById('ls-pnl').textContent=sc(totPnl)+fmtGBP(totPnl);
+  document.getElementById('ls-pnl').style.color=totPnl>=0?'var(--green)':'var(--red)';
+  document.getElementById('ls-pnlPct').textContent=sc(totPct)+totPct.toFixed(1)+'% overall';
+
+  const sorted=rows.filter(r=>r.pnlPct!==null).sort((a,b)=>b.pnlPct-a.pnlPct);
+  if(sorted.length){
+    const best=sorted[0],worst=sorted[sorted.length-1];
+    document.getElementById('ls-win').textContent=best.p.ticker;
+    document.getElementById('ls-win').style.color='var(--green)';
+    document.getElementById('ls-winSub').textContent=sc(best.pnlPct)+best.pnlPct.toFixed(1)+'%';
+    document.getElementById('ls-lose').textContent=worst.p.ticker;
+    document.getElementById('ls-lose').style.color=worst.pnlPct<0?'var(--red)':'var(--accent)';
+    document.getElementById('ls-loseSub').textContent=sc(worst.pnlPct)+worst.pnlPct.toFixed(1)+'%';
+  }
+  checkAlerts(prices);
+}
+
+// ── UPLOAD & AI ───────────────────────────────────────────────────
+let _files=[];
+let _uploadLog=LS.get('uploadLog3',[]); // kept for legacy, superseded by _docLibrary
+
+// ── DOCUMENT LIBRARY ─────────────────────────────────────────────
+// Stores a rich record of every processed file individually
+let _docLibrary = LS.get('docLibrary', []);
+
+function renderDocLibrary(){
+  const container = document.getElementById('docLibrary');
+  const countBadge = document.getElementById('docLibCount');
+  if(!container) return;
+
+  countBadge.textContent = _docLibrary.length + ' file' + (_docLibrary.length!==1?'s':'');
+
+  if(!_docLibrary.length){
+    container.innerHTML = '<div class="doc-lib-empty">No files processed yet. Upload your CSV and PDFs above.</div>';
+    return;
+  }
+
+  // Detect duplicates — PDFs: same period more than once. CSVs: more than one CSV total.
+  const periodCounts = {};
+  _docLibrary.forEach(d => {
+    const key = d.type==='csv'
+      ? 'csv'                              // flag if more than 1 CSV exists
+      : 'pdf:' + (d.period||d.filename);   // flag PDFs with same period
+    periodCounts[key] = (periodCounts[key]||0) + 1;
+  });
+
+  container.innerHTML = _docLibrary.slice().reverse().map((doc, revIdx) => {
+    const idx = _docLibrary.length - 1 - revIdx; // real index for deletion
+    const isDup = doc.type==='csv'
+      ? periodCounts['csv'] > 1
+      : periodCounts['pdf:'+(doc.period||doc.filename)] > 1;
+    const typeClass = doc.type==='csv' ? 'csv' : 'pdf';
+    const icon = doc.type==='csv' ? '📊' : '📄';
+
+    // Build detail tags
+    const tags = [];
+    if(doc.type==='csv'){
+      if(doc.trades) tags.push({cls:'good', text: doc.trades+' trades'});
+      if(doc.positions) tags.push({cls:'info', text: doc.positions+' positions'});
+      if(doc.dateRange) tags.push({cls:'', text: doc.dateRange});
+      if(doc.totalDeposited) tags.push({cls:'info', text:'£'+doc.totalDeposited.toFixed(0)+' deposited'});
+      if(doc.totalDividends) tags.push({cls:'good', text:'£'+doc.totalDividends.toFixed(2)+' dividends'});
+    } else {
+      if(doc.period) tags.push({cls:'info', text: doc.period});
+      if(doc.portfolioValue) tags.push({cls:'good', text:'Portfolio: £'+doc.portfolioValue.toLocaleString()});
+      if(doc.totalFees) tags.push({cls:'warn', text:'Fees: £'+doc.totalFees.toFixed(2)+(doc.feePercent?' ('+doc.feePercent+'%)':'')});
+      if(doc.subscription) tags.push({cls:'', text:'Sub: £'+doc.subscription.toFixed(2)});
+      if(doc.fxFees) tags.push({cls:'warn', text:'FX: £'+doc.fxFees.toFixed(2)});
+    }
+
+    return `<div class="doc-item ${typeClass}${isDup?' dup':''}">
+      <div class="doc-header">
+        <span class="doc-icon">${icon}</span>
+        <span class="doc-name" title="${doc.filename}">${doc.filename}</span>
+        <span class="doc-date">${doc.uploadedAt}</span>
+        <span class="doc-del" onclick="deleteDoc(${idx})" title="Remove file">🗑</span>
+      </div>
+      ${tags.length ? `<div class="doc-tags">${tags.map(t=>`<span class="doc-tag ${t.cls}">${t.text}</span>`).join('')}</div>` : ''}
+      ${isDup ? `<div class="dup-warn">⚠ ${doc.type==='csv' ? 'Multiple CSVs — only the most recent is used. Delete older ones.' : 'Another PDF covers this same period. Only the most recent is used — delete the older one.'}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function deleteDoc(idx){
+  const doc = _docLibrary[idx];
+  if(!doc) return;
+  const msg = doc.type==='pdf'
+    ? `Remove "${doc.filename}"?\n\nThis will remove its data (portfolio value, fees) from your stored history. You can re-upload it anytime.`
+    : `Remove "${doc.filename}"?\n\nThis will remove the trade and position data from this CSV. Your other files will be unaffected.`;
+  if(!confirm(msg)) return;
+
+  _docLibrary.splice(idx, 1);
+  LS.set('docLibrary', _docLibrary);
+
+  // Rebuild STATE cleanly from remaining documents
+  rebuildStateFromLibrary();
+
+  // Destroy all existing charts so they re-render fresh
+  Object.keys(charts).forEach(id => {
+    try { charts[id].destroy(); delete charts[id]; } catch(e){}
+  });
+
+  // Re-render everything
+  renderDocLibrary();
+  renderHome();
+  renderAnalysisTab();
+
+  // Show re-analyse prompt if Anthropic key is available
+  if(getKey('anthropic_key') && _docLibrary.length){
+    showReanalysePrompt();
+  } else {
+    // Just switch to home to show updated charts
+    showPage('home', document.querySelectorAll('.nav-item')[0]);
+  }
+}
+
+function showReanalysePrompt(){
+  // Show a banner on the upload tab prompting user to re-run analysis
+  // with the updated document set
+  const box = document.getElementById('aiBox');
+  const content = document.getElementById('aiContent');
+  box.style.display = 'block';
+  content.innerHTML = `
+    <div style="text-align:center;padding:16px 0">
+      <div style="font-size:24px;margin-bottom:10px">🔄</div>
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">Document removed</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.7">
+        Your charts and numbers have been updated.<br>
+        Re-run the AI analysis to get fresh insights<br>based on your remaining documents.
+      </div>
+      <button onclick="reanalyseFromLibrary()" style="padding:12px 24px;background:var(--accent);color:#0a0c0f;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;-webkit-appearance:none">
+        ✦ Re-analyse Now
+      </button>
+    </div>`;
+
+  // Switch to upload tab so user can see it
+  showPage('upload', document.querySelectorAll('.nav-item')[3]);
+}
+
+async function reanalyseFromLibrary(){
+  // Run AI analysis using only the stored STATE — no new files needed
+  const anthropicKey = getKey('anthropic_key');
+  if(!anthropicKey){
+    document.getElementById('aiContent').innerHTML = '<div style="color:var(--warn);font-size:12px">Add your Anthropic API key in ⚙️ Settings first.</div>';
+    return;
+  }
+  if(!STATE){
+    document.getElementById('aiContent').innerHTML = '<div style="color:var(--warn);font-size:12px">No data to analyse. Upload your CSV first.</div>';
+    return;
+  }
+
+  const btn = document.querySelector('[onclick="reanalyseFromLibrary()"]');
+  if(btn){ btn.disabled=true; btn.textContent='↻ Analysing…'; }
+
+  const content = document.getElementById('aiContent');
+  const spinner = document.getElementById('aiSpinner');
+  const cursor = document.getElementById('typingCursor');
+  spinner.style.display='inline';
+  cursor.style.display='inline-block';
+  content.innerHTML='<span style="color:var(--muted);font-size:11px">✦ Re-analysing with updated documents…</span><span class="typing-cursor"></span>';
+
+  // Build context from current STATE (which was just rebuilt from remaining docs)
+  function buildContext(){
+    const s = STATE;
+    if(!s) return '';
+    const lines = ['═══ CURRENT PORTFOLIO DATA (after document changes) ═══'];
+    const netIn = (s.totalDeposited||0)-(s.totalWithdrawn||0);
+    lines.push(`Total deposited: £${(s.totalDeposited||0).toFixed(2)}`);
+    if(s.totalWithdrawn>0) lines.push(`Total withdrawn: £${s.totalWithdrawn.toFixed(2)}`);
+    lines.push(`Net cash invested: £${netIn.toFixed(2)}`);
+    if(s.cashFlow&&s.cashFlow.length){
+      lines.push('Cash flow events:');
+      s.cashFlow.forEach(c=>{
+        const d=new Date(c.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+        lines.push(`  ${d}: ${c.type==='withdrawal'?'WITHDRAWAL':'DEPOSIT'} £${c.amount.toFixed(2)}`);
+      });
+    }
+    if(s.portfolioHistory&&s.portfolioHistory.length){
+      lines.push('Portfolio values from statements:');
+      s.portfolioHistory.forEach(p=>lines.push(`  ${p.date}: £${p.value.toLocaleString()}`));
+    }
+    if(s.feeHistory&&s.feeHistory.length){
+      lines.push('Annual fees:');
+      s.feeHistory.forEach(f=>lines.push(`  ${f.year}: £${f.total.toFixed(2)} (${f.feePercent||'?'}%) — Sub £${(f.subscription||0).toFixed(2)}, FX £${(f.fx||0).toFixed(2)}, Tax £${(f.withholding||0).toFixed(2)}`));
+    }
+    if(s.openPositions&&s.openPositions.length){
+      lines.push(`Open positions (${s.openPositions.length}):`);
+      s.openPositions.sort((a,b)=>b.totalCost-a.totalCost).forEach(p=>
+        lines.push(`  ${p.ticker}: ${p.qty.toFixed(4)} shares, cost £${p.totalCost.toFixed(2)}`));
+    }
+    if(s.totalDividends>0) lines.push(`Total dividends: £${s.totalDividends.toFixed(2)}`);
+    if(s.totalInterest>0) lines.push(`Total interest: £${s.totalInterest.toFixed(2)}`);
+    lines.push(`Documents in library: ${_docLibrary.length} (${_docLibrary.map(d=>d.filename).join(', ')})`);
+    lines.push('═══ END ═══');
+    return lines.join('\n');
+  }
+
+  const prompt = `You are analysing a UK investor's Freetrade ISA. They have just removed a document and want a fresh analysis based on their remaining data.
+
+${buildContext()}
+
+Provide a fresh comprehensive analysis:
+
+**📊 PORTFOLIO OVERVIEW**
+All deposits, withdrawals, net invested, portfolio value over time, total fees, net profit. Be specific with £ amounts.
+
+**📅 YEAR BY YEAR FEES**
+For each year with data: subscription, FX fees, tax, ETF fees, total, % of portfolio. Trend direction.
+
+**✅ WHAT YOU'VE DONE WELL**
+3 specific smart decisions with £ amounts.
+
+**⚠️ COSTLY PATTERNS**
+3 expensive habits or mistakes with estimated £ impact.
+
+**💡 YOUR NEXT 3 ACTIONS**
+Concrete personalised steps with suggested amounts.
+
+Be direct. Use £ throughout. No disclaimers.`;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:[{type:'text',text:prompt}]}]})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`API error ${res.status}`);}
+    const data = await res.json();
+    const text = data.content?.map(c=>c.text||'').join('')||'No response.';
+    cursor.style.display='none';
+    renderAIText(text, content);
+    // Save as latest analysis
+    const entry={text,date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+    LS.set('latestAnalysis',entry);
+    document.getElementById('aiTs').textContent=entry.date;
+    renderAIText(text, document.getElementById('savedAiContent'));
+    document.getElementById('savedAiDate').textContent=entry.date;
+  }catch(e){
+    cursor.style.display='none';
+    content.innerHTML=`<div style="color:var(--red);font-size:12px">✗ ${e.message}<br>${e.message.includes('401')?'Check your Anthropic key in ⚙️ Settings.':'Check your internet connection.'}</div>`;
+  }
+  spinner.style.display='none';
+}
+
+function rebuildStateFromLibrary(){
+  // Re-derive STATE cleanly from the document library
+  // Rules:
+  //   CSV  — latest upload wins (Freetrade CSV always contains full history)
+  //   PDFs — deduplicated by period, latest upload of each period wins
+
+  if(!_docLibrary.length){
+    STATE = null;
+    LS.set('portfolioState', null);
+    return;
+  }
+
+  let newState = {};
+
+  // ── CSV: use only the most recently uploaded CSV ──────────────
+  const csvEntries = _docLibrary.filter(d => d.type==='csv' && d.parsedData);
+  if(csvEntries.length){
+    // Sort by upload date — take the last one (most recent full history)
+    const latestCsv = csvEntries[csvEntries.length - 1];
+    newState = {...latestCsv.parsedData};
+  }
+
+  // ── PDFs: deduplicate by period, latest upload of each period wins ──
+  const pdfEntries = _docLibrary.filter(d => d.type==='pdf' && d.parsedData);
+  if(pdfEntries.length){
+    // Group by period key, keeping only the most recent entry per period
+    const byPeriod = {};
+    pdfEntries.forEach(d => {
+      const key = d.period || d.filename; // use period string as unique key
+      // If no existing entry for this period, or this one is newer, keep it
+      if(!byPeriod[key] || new Date(d.uploadedAt) >= new Date(byPeriod[key].uploadedAt)){
+        byPeriod[key] = d;
+      }
+    });
+
+    const dedupedPdfs = Object.values(byPeriod).map(d => d.parsedData).filter(Boolean);
+    STATE = newState;
+    mergePdfDataIntoState(dedupedPdfs);
+    newState = STATE;
+  }
+
+  STATE = Object.keys(newState).length ? {...newState, lastUpdated: new Date().toISOString()} : null;
+  LS.set('portfolioState', STATE);
+}
+
+function addToDocLibrary(files, csvParsed, parsedPdfs){
+  const now = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  files.forEach(file => {
+    if(file.name.endsWith('.csv') && csvParsed){
+      // For CSVs: Freetrade always exports full history, so replace any existing CSV
+      // that covers overlapping dates — don't keep old partial CSVs alongside new full ones
+      const newDateRange = csvParsed.latestDate || '';
+
+      // Remove any existing CSV entries (latest full CSV replaces all older ones)
+      // Keep CSVs only if they cover a clearly different non-overlapping period
+      const existingCsvIdx = _docLibrary.findIndex(d =>
+        d.type==='csv' && (d.filename===file.name || d.dateRange===newDateRange)
+      );
+
+      const entry = {
+        id: Date.now() + Math.random(),
+        filename: file.name,
+        type: 'csv',
+        uploadedAt: now,
+        trades: csvParsed.totalTrades,
+        positions: csvParsed.openPositions?.length||0,
+        totalDeposited: csvParsed.totalDeposited,
+        totalWithdrawn: csvParsed.totalWithdrawn,
+        totalDividends: csvParsed.totalDividends,
+        dateRange: newDateRange,
+        parsedData: csvParsed,
+        note: 'Full activity history — replaces previous CSV'
+      };
+
+      if(existingCsvIdx >= 0){
+        // Replace existing entry
+        _docLibrary[existingCsvIdx] = entry;
+      } else {
+        // If there's already a CSV in the library, it means user has uploaded
+        // a newer export — remove old ones to avoid double-counting
+        const oldCsvIndices = _docLibrary
+          .map((d,i) => d.type==='csv' ? i : -1)
+          .filter(i => i >= 0)
+          .reverse(); // remove from end first
+        oldCsvIndices.forEach(i => _docLibrary.splice(i, 1));
+        _docLibrary.push(entry);
+      }
+
+    } else if(file.name.endsWith('.pdf')){
+      // Find the parsed PDF matching this filename
+      const parsed = parsedPdfs.find(p => p.source===file.name);
+      const period = parsed
+        ? (parsed.periodStart && parsed.periodEnd
+            ? parsed.periodStart + ' – ' + parsed.periodEnd
+            : String(parsed.year||''))
+        : '';
+
+      // Deduplicate by period — if same period already exists, replace it
+      const existingIdx = _docLibrary.findIndex(d =>
+        d.type==='pdf' && (
+          d.filename===file.name ||
+          (period && d.period===period)
+        )
+      );
+
+      const entry = {
+        id: Date.now() + Math.random(),
+        filename: file.name,
+        type: 'pdf',
+        uploadedAt: now,
+        period,
+        portfolioValue: parsed?.portfolioValue||null,
+        totalFees: parsed?.totalFees||null,
+        feePercent: parsed?.feePercent||null,
+        subscription: parsed?.subscription||null,
+        fxFees: parsed?.fxFees||null,
+        parsedData: parsed||null,
+        parsedLocally: !!parsed,
+        note: parsed ? `Parsed: portfolio £${parsed.portfolioValue||'?'}, fees £${parsed.totalFees||'?'}` : 'Sent to AI — local parsing not available'
+      };
+
+      if(existingIdx >= 0){
+        _docLibrary[existingIdx] = entry; // replace duplicate period
+      } else {
+        _docLibrary.push(entry);
+      }
+    }
+  });
+
+  LS.set('docLibrary', _docLibrary);
+  renderDocLibrary();
+}
+
+// Legacy — keep for backward compat
+function renderUploadLog(){ renderDocLibrary(); }
+
+function logUpload(){
+  // Now handled by addToDocLibrary — this is a no-op kept for safety
+}
+
+
+function checkUploadNotices(){
+  document.getElementById('upload-nokey').style.display=getKey('anthropic_key')?'none':'block';
+}
+
+function handleFiles(files){
+  Array.from(files).forEach(f=>{if(!_files.find(x=>x.name===f.name))_files.push(f);});
+  renderQueue();
+}
+function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag');handleFiles(e.dataTransfer.files);}
+function renderQueue(){
+  document.getElementById('fileQueue').innerHTML=_files.map((f,i)=>`
+    <div class="file-item">
+      <span style="font-size:16px">${f.name.endsWith('.csv')?'📊':'📄'}</span>
+      <span class="fi-name">${f.name}</span>
+      <span class="fi-size">${(f.size/1024).toFixed(1)}KB</span>
+      <span class="fi-rm" onclick="rmFile(${i})">✕</span>
+    </div>`).join('');
+  document.getElementById('processBtn').disabled=_files.length===0;
+}
+function rmFile(i){_files.splice(i,1);renderQueue();}
+
+// PDF text extraction — reads as text via hidden iframe trick, falls back to base64 for API
+async function extractPdfBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function extractPdfText(file){
+  // Extract raw text from PDF using PDF.js via CDN
+  return new Promise((res)=>{
+    const reader=new FileReader();
+    reader.onload=async(e)=>{
+      try{
+        // Dynamically load PDF.js if not already loaded
+        if(!window.pdfjsLib){
+          await new Promise((r,j)=>{
+            const s=document.createElement('script');
+            s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            s.onload=r; s.onerror=j;
+            document.head.appendChild(s);
+          });
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const typedArray=new Uint8Array(e.target.result);
+        const pdf=await window.pdfjsLib.getDocument({data:typedArray}).promise;
+        let text='';
+        for(let i=1;i<=pdf.numPages;i++){
+          const page=await pdf.getPage(i);
+          const content=await page.getTextContent();
+          text+=content.items.map(item=>item.str).join(' ')+'\n';
+        }
+        res(text);
+      }catch(err){
+        console.warn('PDF.js extraction failed:',err);
+        res(''); // fall through to API-only mode
+      }
+    };
+    reader.onerror=()=>res('');
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function parseFreetradeAnnualPdf(text, filename){
+  if(!text||text.length<50) return null;
+
+  // Debug — log the first 800 chars so we can see what PDF.js extracted
+  console.log('=== PDF TEXT SAMPLE for',filename,'===');
+  console.log(text.slice(0,800));
+  console.log('=== END SAMPLE ===');
+
+  const result = {
+    source: filename,
+    portfolioValue: null,
+    totalFees: null,
+    feePercent: null,
+    subscription: null,
+    fxFees: null,
+    withholdingTax: null,
+    etfFees: null,
+    etfTxFees: null,
+    stampDuty: null,
+    periodStart: null,
+    periodEnd: null,
+    year: null,
+    impactOnPortfolio: null
+  };
+
+  // Period detection — "16 February 2022 – 15 February 2023"
+  const periodRx=/(\d{1,2}\s+\w+\s+\d{4})\s*[–—\-]+\s*(\d{1,2}\s+\w+\s+\d{4})/;
+  const pm=text.match(periodRx);
+  if(pm){
+    result.periodStart=pm[1].trim();
+    result.periodEnd=pm[2].trim();
+    const yearM=pm[2].match(/\d{4}/);
+    if(yearM) result.year=parseInt(yearM[0]);
+    console.log('Period found:',result.periodStart,'–',result.periodEnd);
+  } else {
+    // Try just finding a year range like "2022 – 2023" or "2022-2023"
+    const yearRx=/20\d\d\s*[–—\-]\s*20\d\d/;
+    const ym=text.match(yearRx);
+    if(ym){
+      const years=ym[0].match(/20\d\d/g);
+      if(years&&years.length>=2){ result.year=parseInt(years[1]); console.log('Year range found:',ym[0]); }
+    }
+    // Try just finding any 4-digit year near "Annual Costs"
+    const annualYearRx=/Annual Costs[^0-9]*(\d{4})/i;
+    const aym=text.match(annualYearRx);
+    if(aym){ result.year=parseInt(aym[1]); console.log('Year from Annual Costs:',aym[1]); }
+  }
+
+  // Portfolio value — try multiple patterns
+  // PDF.js extracts "4,937.04" but we need to handle comma grouping correctly
+  const pvPatterns=[
+    /Portfolio Value as of[^\n]*?([\d]{1,3}(?:,\d{3})+\.?\d*)/i,  // "4,937.04" format
+    /Portfolio Value as of[^\n]*?(\d+\.\d{2})\b/i,                  // plain decimal
+    /Portfolio Value[^\n]*?([\d]{1,3}(?:,\d{3})+\.?\d*)/i,
+    /Portfolio Value[^\n]*?(\d{4,}\.?\d*)/i,                        // 4+ digit number
+  ];
+  for(const rx of pvPatterns){
+    const m=text.match(rx);
+    if(m){
+      const val=parseFloat(m[1].replace(/,/g,''));
+      if(val>500){ result.portfolioValue=val; console.log('Portfolio value:',val,'(pattern:',rx.source.slice(0,50)+')'); break; }
+    }
+  }
+
+  // Total costs and charges
+  const tcPatterns=[
+    /Total costs and charges\s+([\d,]+\.?\d*)\s+([\d.]+)/i,
+    /Total costs and charges\s*£?([\d,]+\.?\d*)/i,
+  ];
+  for(const rx of tcPatterns){
+    const m=text.match(rx);
+    if(m){
+      result.totalFees=parseFloat(m[1].replace(/,/g,''));
+      if(m[2]) result.feePercent=parseFloat(m[2]);
+      console.log('Total fees:',result.totalFees,'%:',result.feePercent);
+      break;
+    }
+  }
+
+  // Subscription fees
+  const subRx=/(?:ISA subscription|Standard subscription|subscription)\s+([\d,]+\.?\d*)/gi;
+  let subTotal=0, subMatch;
+  while((subMatch=subRx.exec(text))!==null){
+    const v=parseFloat(subMatch[1].replace(/,/g,''));
+    if(v<500){ subTotal+=v; } // sanity check — ignore huge numbers
+  }
+  if(subTotal>0){ result.subscription=subTotal; console.log('Subscription:',subTotal); }
+
+  // FX fees
+  const fxRx=/FX fees?\s+([\d,]+\.?\d*)/gi;
+  let fxTotal=0, fxMatch;
+  while((fxMatch=fxRx.exec(text))!==null){
+    const v=parseFloat(fxMatch[1].replace(/,/g,''));
+    if(v<10000) fxTotal+=v;
+  }
+  if(fxTotal>0){ result.fxFees=fxTotal; console.log('FX fees:',fxTotal); }
+
+  // Withholding tax
+  const wtRx=/Withholding tax on dividends\s+([\d,]+\.?\d*)/gi;
+  let wtTotal=0, wtMatch;
+  while((wtMatch=wtRx.exec(text))!==null){ wtTotal+=parseFloat(wtMatch[1].replace(/,/g,'')); }
+  if(wtTotal>0){ result.withholdingTax=wtTotal; console.log('Withholding tax:',wtTotal); }
+
+  // ETF ongoing fees
+  const etfRx=/(?:ETF|mutual fund)[^.\n]*ongoing fees\*?\s+([\d,]+\.?\d*)/gi;
+  let etfTotal=0, etfMatch;
+  while((etfMatch=etfRx.exec(text))!==null){ etfTotal+=parseFloat(etfMatch[1].replace(/,/g,'')); }
+  if(etfTotal>0){ result.etfFees=etfTotal; console.log('ETF fees:',etfTotal); }
+
+  // ETF transaction fees
+  const etfTxRx=/(?:ETF|mutual fund)[^.\n]*transaction fees\*?\s+([\d,]+\.?\d*)/gi;
+  let etfTxTotal=0, etfTxMatch;
+  while((etfTxMatch=etfTxRx.exec(text))!==null){ etfTxTotal+=parseFloat(etfTxMatch[1].replace(/,/g,'')); }
+  if(etfTxTotal>0){ result.etfTxFees=etfTxTotal; }
+
+  // Impact on portfolio
+  const impRx=/Impact on your portfolio\s+([\d.]+)%/i;
+  const impm=text.match(impRx);
+  if(impm){ result.impactOnPortfolio=parseFloat(impm[1]); console.log('Impact:',result.impactOnPortfolio+'%'); }
+
+  console.log('=== PARSE RESULT ===', JSON.stringify(result));
+
+  if(result.portfolioValue||result.totalFees||result.year) return result;
+  return null;
+}
+
+// Merge parsed PDF data into STATE
+function mergePdfDataIntoState(parsedPdfs){
+  if(!parsedPdfs||!parsedPdfs.length) return;
+
+  // Sort by year
+  const sorted=parsedPdfs.filter(p=>p&&p.year).sort((a,b)=>a.year-b.year);
+  if(!sorted.length) return;
+
+  // Build portfolio history from PDF snapshots
+  const portfolioHistory=sorted
+    .filter(p=>p.portfolioValue)
+    .map(p=>({
+      date: p.periodEnd||String(p.year),
+      value: p.portfolioValue,
+      year: p.year
+    }));
+
+  // Build fee history
+  const feeHistory=sorted
+    .filter(p=>p.totalFees)
+    .map(p=>({
+      year: p.periodEnd||String(p.year),
+      total: p.totalFees,
+      subscription: p.subscription||0,
+      fx: p.fxFees||0,
+      withholding: p.withholdingTax||0,
+      etf: (p.etfFees||0)+(p.etfTxFees||0),
+      other: Math.max(0,(p.totalFees||0)-(p.subscription||0)-(p.fxFees||0)-(p.withholdingTax||0)-(p.etfFees||0)-(p.etfTxFees||0)),
+      feePercent: p.feePercent||null
+    }));
+
+  // Latest portfolio value from most recent PDF
+  const latest=sorted[sorted.length-1];
+
+  // Accumulate total fees from PDFs
+  const totalFeesFromPdfs=sorted.reduce((s,p)=>s+(p.totalFees||0),0);
+  const totalFxFromPdfs=sorted.reduce((s,p)=>s+(p.fxFees||0),0);
+  const totalSubFromPdfs=sorted.reduce((s,p)=>s+(p.subscription||0),0);
+  const totalWtFromPdfs=sorted.reduce((s,p)=>s+(p.withholdingTax||0),0);
+
+  // Merge into STATE
+  if(!STATE) STATE={};
+  if(portfolioHistory.length){
+    STATE.portfolioHistory=portfolioHistory;
+    STATE.latestPortfolioValue=latest.portfolioValue;
+    STATE.latestStatementDate=latest.periodEnd;
+  }
+  if(feeHistory.length){
+    STATE.feeHistory=feeHistory;
+    STATE.totalFees=totalFeesFromPdfs;
+    STATE.totalFxFeesFromPdfs=totalFxFromPdfs;
+    STATE.totalSubscriptionFees=totalSubFromPdfs;
+    STATE.totalWithholdingTax=totalWtFromPdfs;
+  }
+  STATE.pdfsParsed=sorted.length;
+  STATE.pdfsLastUpdated=new Date().toISOString();
+  LS.set('portfolioState',STATE);
+}
+
+async function processUploads(){
+  if(!_files.length) return;
+  const anthropicKey=getKey('anthropic_key');
+  const btn=document.getElementById('processBtn');
+  const box=document.getElementById('aiBox');
+  const content=document.getElementById('aiContent');
+  const spinner=document.getElementById('aiSpinner');
+  const cursor=document.getElementById('typingCursor');
+  btn.disabled=true; btn.textContent='↻ Processing…';
+  box.style.display='block'; content.innerHTML='';
+  cursor.style.display='inline-block'; spinner.style.display='inline';
+
+  let csvText='', csvParsed=null;
+  const pdfBase64s=[];   // for sending to Anthropic API
+  const parsedPdfs=[];   // for local chart/number updates
+
+  // ── STEP 1: Read all files ────────────────────────────────────
+  for(const file of _files){
+    if(file.name.endsWith('.csv')){
+      content.innerHTML=`<div style="color:var(--muted);font-size:12px;line-height:2">📊 Reading ${file.name}…<span class="typing-cursor"></span></div>`;
+      csvText=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file);});
+      try{csvParsed=parseFreetradeCsv(csvText);}catch(e){console.warn('CSV parse error',e);}
+      csvText=csvText.slice(0,14000);
+    } else if(file.name.endsWith('.pdf')){
+      content.innerHTML=`<div style="color:var(--muted);font-size:12px;line-height:2">
+        📄 Reading ${file.name}…<span class="typing-cursor"></span><br>
+        <span style="font-size:10px">(First PDF loads PDF reader — may take 10–20 seconds)</span>
+      </div>`;
+      // Extract text for local parsing
+      const pdfText=await extractPdfText(file);
+      if(pdfText && pdfText.length > 50){
+        // Redact personal info before parsing or logging
+        // Freetrade PDFs contain name and address in the header — strip those lines
+        const redactedText = pdfText
+          .split('\n')
+          .map(line => {
+            // Blank out lines that look like name/address (short lines near the top, no financial data)
+            if(/^\s*[A-Z][a-z]+ [A-Z][a-z]+\s*$/.test(line)) return '[NAME REDACTED]';
+            if(/\b[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b/.test(line)) return '[ADDRESS REDACTED]'; // postcode pattern
+            return line;
+          })
+          .join('\n');
+
+        const parsed=parseFreetradeAnnualPdf(redactedText, file.name);
+        if(parsed){
+          parsedPdfs.push(parsed);
+          console.log('✓ Parsed PDF locally:',file.name,'— year:',parsed.year,'portfolio:',parsed.portfolioValue,'fees:',parsed.totalFees);
+        } else {
+          console.warn('PDF text extracted but pattern did not match:',file.name);
+          console.log('PDF sample (redacted):', redactedText.slice(0,300));
+        }
+      } else {
+        console.warn('PDF text extraction returned empty for:',file.name);
+      }
+      // Note: we do NOT send raw PDFs to the API — they contain personal info.
+      // All financially relevant data is captured in parsedPdfs above.
+    }
+  }
+
+  // ── STEP 2: Register files in document library first ─────────
+  // Do this BEFORE rebuilding STATE so the library is complete
+  addToDocLibrary(_files, csvParsed, parsedPdfs);
+
+  // ── STEP 3: Rebuild STATE cleanly from the full library ───────
+  // This is the single source of truth — no incremental merging
+  // which was causing double-counting
+  rebuildStateFromLibrary();
+
+  // ── STEP 4: Re-render if any files were processed ────────────
+  const anyDataProcessed = csvParsed || parsedPdfs.length;
+  if(anyDataProcessed){
+    renderHome();
+    renderAnalysisTab();
+    populateAlertTickers();
+  }
+
+  // ── STEP 5: Show data update summary ─────────────────────────
+  const updateSummary=[];
+  if(csvParsed) updateSummary.push(`${csvParsed.totalTrades} trades · ${csvParsed.openPositions.length} open positions`);
+  if(parsedPdfs.length){
+    const years=parsedPdfs.filter(p=>p.year).map(p=>p.year).join(', ');
+    updateSummary.push(`${parsedPdfs.length} PDF${parsedPdfs.length>1?'s':''} parsed locally (${years})`);
+    if(parsedPdfs.some(p=>p.portfolioValue)){
+      const vals=parsedPdfs.filter(p=>p.portfolioValue).map(p=>`${p.year}: £${p.portfolioValue.toLocaleString()}`).join(' · ');
+      updateSummary.push(`Portfolio values: ${vals}`);
+    }
+  }
+  const apiOnlyPdfs=[];
+  if(apiOnlyPdfs.length) updateSummary.push(`${apiOnlyPdfs.length} PDF${apiOnlyPdfs.length>1?'s':''} sent to AI only (local text extraction unavailable)`);
+
+  // ── STEP 6: AI Analysis (if key present) ─────────────────────
+  if(!anthropicKey){
+    cursor.style.display='none'; spinner.style.display='none';
+    content.innerHTML=`<div style="color:var(--text);font-size:12px;line-height:2">
+      ✓ <strong>Data updated successfully</strong><br>
+      ${updateSummary.map(s=>`<span style="color:var(--muted)">· ${s}</span>`).join('<br>')}
+      ${parsedPdfs.length?`<br><br><span style="color:var(--green)">✓ ${parsedPdfs.length} PDF${parsedPdfs.length>1?'s':''} parsed — charts and fees updated</span>`:''}
+      <br><br><span style="color:var(--muted)">Add your Anthropic API key in ⚙️ Settings to also get AI analysis.</span>
+    </div>`;
+    btn.disabled=false; btn.textContent='✦ Update Portfolio + Analyse with AI';
+    logUpload(); return;
+  }
+
+  content.innerHTML=`<span style="color:var(--muted);font-size:11px">✦ Sending to AI for analysis…</span><span class="typing-cursor"></span>`;
+
+  // ── BUILD CUMULATIVE CONTEXT FROM STORED STATE ────────────────
+  // This runs AFTER mergePdfDataIntoState so STATE already includes
+  // both previously stored data AND anything parsed from today's upload
+  function buildStoredContext(){
+    const s = STATE;
+    if(!s) return '';
+    const lines = [];
+
+    lines.push('═══ CUMULATIVE PORTFOLIO HISTORY (all previous uploads) ═══');
+
+    // Cash flow
+    const netIn = (s.totalDeposited||0) - (s.totalWithdrawn||0);
+    lines.push(`Total deposited: £${(s.totalDeposited||0).toFixed(2)}`);
+    if(s.totalWithdrawn>0) lines.push(`Total withdrawn: £${s.totalWithdrawn.toFixed(2)}`);
+    lines.push(`Net cash invested: £${netIn.toFixed(2)}`);
+
+    // Cash flow events
+    if(s.cashFlow&&s.cashFlow.length){
+      lines.push('Cash flow events:');
+      s.cashFlow.forEach(c=>{
+        const d=new Date(c.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+        lines.push(`  ${d}: ${c.type==='withdrawal'?'WITHDRAWAL':'DEPOSIT'} £${c.amount.toFixed(2)}`);
+      });
+    }
+
+    // Portfolio values from statements
+    if(s.portfolioHistory&&s.portfolioHistory.length){
+      lines.push('Portfolio values from annual statements:');
+      s.portfolioHistory.forEach(p=>lines.push(`  ${p.date}: £${p.value.toLocaleString()}`));
+      lines.push(`Latest portfolio value: £${s.latestPortfolioValue.toLocaleString()} (as of ${s.latestStatementDate||'last statement'})`);
+    }
+
+    // Fee history from PDFs
+    if(s.feeHistory&&s.feeHistory.length){
+      lines.push('Annual fees from statements:');
+      s.feeHistory.forEach(f=>{
+        lines.push(`  ${f.year}: Total £${f.total.toFixed(2)}${f.feePercent?` (${f.feePercent}%)`:''}`+
+          ` — Subscription £${(f.subscription||0).toFixed(2)}, FX £${(f.fx||0).toFixed(2)}, Tax £${(f.withholding||0).toFixed(2)}, ETF £${(f.etf||0).toFixed(2)}`);
+      });
+      const totalAllFees = s.feeHistory.reduce((sum,f)=>sum+(f.total||0),0);
+      lines.push(`Total fees all years: £${totalAllFees.toFixed(2)}`);
+    } else if(s.totalFxFees>0){
+      lines.push(`FX fees from activity: £${s.totalFxFees.toFixed(2)}`);
+    }
+
+    // Dividends and interest
+    if(s.totalDividends>0) lines.push(`Total dividends received: £${s.totalDividends.toFixed(2)}`);
+    if(s.totalInterest>0) lines.push(`Total interest received: £${s.totalInterest.toFixed(2)}`);
+
+    // Open positions
+    if(s.openPositions&&s.openPositions.length){
+      lines.push(`Open positions (${s.openPositions.length} holdings):`);
+      s.openPositions
+        .sort((a,b)=>b.totalCost-a.totalCost)
+        .forEach(p=>lines.push(`  ${p.ticker} (${p.name||p.ticker}): ${p.qty.toFixed(4)} shares, cost basis £${p.totalCost.toFixed(2)}, avg £${p.avgCost.toFixed(2)}`));
+    }
+
+    // Trade summary
+    if(s.totalTrades) lines.push(`Total trades: ${s.totalTrades} (${s.totalBuyValue?'£'+s.totalBuyValue.toFixed(0)+' bought':''}${s.totalSellValue?', £'+s.totalSellValue.toFixed(0)+' sold':''})`);
+
+    // Dividend breakdown
+    if(s.divByTicker&&Object.keys(s.divByTicker).length){
+      lines.push('Dividends by stock: '+Object.entries(s.divByTicker).map(([t,v])=>`${t} £${v.toFixed(2)}`).join(', '));
+    }
+
+    // Upload history
+    if(_uploadLog&&_uploadLog.length){
+      lines.push(`Upload history: ${_uploadLog.length} previous uploads (latest: ${_uploadLog[_uploadLog.length-1]?.date||'unknown'})`);
+    }
+
+    // Net profit estimate
+    if(s.latestPortfolioValue&&netIn){
+      const totalFees=s.feeHistory?s.feeHistory.reduce((sum,f)=>sum+(f.total||0),0):s.totalFxFees||0;
+      const profit=s.latestPortfolioValue-netIn;
+      lines.push(`Estimated net profit: £${profit.toFixed(2)} (portfolio £${s.latestPortfolioValue} minus net invested £${netIn.toFixed(2)})`);
+      if(totalFees>0) lines.push(`True profit after fees: £${(profit-totalFees).toFixed(2)}`);
+    }
+
+    lines.push('═══ END OF STORED HISTORY ═══');
+    return lines.join('\n');
+  }
+
+  // Build context from PDFs parsed THIS session
+  // Note: we do NOT send raw PDFs to the API — they contain personal info (name, address).
+  // Instead we send only the structured data already extracted locally.
+  let newPdfContext='';
+  if(parsedPdfs.length){
+    newPdfContext='\n\n─── NEW annual statements uploaded this session ───\n'+parsedPdfs.map(p=>`
+${p.periodStart||''} – ${p.periodEnd||p.year||''}:
+  Portfolio value: £${p.portfolioValue||'unknown'}
+  Total fees: £${p.totalFees||'unknown'} (${p.feePercent||'?'}% of portfolio)
+  Subscription: £${p.subscription||0}  FX fees: £${p.fxFees||0}
+  Withholding tax: £${p.withholdingTax||0}  ETF fees: £${(p.etfFees||0)+(p.etfTxFees||0)}
+  Portfolio impact: ${p.impactOnPortfolio||'?'}%`).join('\n');
+  }
+
+  // Sanitise CSV — remove any lines that look like personal info
+  // The CSV activity feed doesn't contain addresses but may have account holder name in some exports
+  function sanitiseCsv(text){
+    if(!text) return '';
+    return text.split('\n')
+      .filter(line => {
+        const l = line.toLowerCase();
+        // Skip any line that looks like it contains a postal address or full name header
+        if(l.includes('e20') || l.includes('glade walk') || l.includes('merle mansion')) return false;
+        return true;
+      })
+      .join('\n');
+  }
+
+  const safeCsvText = sanitiseCsv(csvText);
+
+  // Build API message — structured data only, NO raw PDFs
+  const msgContent=[];
+  // PDFs are NOT sent as documents — personal info (name, address) is in them
+  // The parsed structured data above captures everything financially relevant
+
+  const prompt=`You are analysing a UK investor's Freetrade Stocks & Shares ISA portfolio. You have access to their COMPLETE investment history across all uploads.
+
+${storedContext}
+${newPdfContext}
+${safeCsvText?'\n─── NEW activity CSV uploaded this session ───\n'+safeCsvText:''}
+
+Using ALL of the above data (both stored history and new uploads), provide a comprehensive personal analysis:
+
+**📊 PORTFOLIO OVERVIEW**
+Complete picture: all deposits, all withdrawals, net invested, portfolio value over time, total fees across all years, true net profit. Use every figure available — be specific with dates and £ amounts.
+
+**📅 YEAR BY YEAR FEES**
+For each year with data: subscription, FX fees, withholding tax, ETF fees, total, % of portfolio. Show the trend — is it improving?
+
+**📈 WHAT'S NEW THIS UPLOAD**
+What does today's new data add that wasn't known before? New trades, new statement figures, changes since last analysis.
+
+**✅ WHAT YOU'VE DONE WELL (across all history)**
+3-4 specific smart decisions from the full history with £ amounts and dates.
+
+**⚠️ COSTLY PATTERNS (across all history)**
+3-4 mistakes or expensive habits across the full history. Estimated £ impact of each.
+
+**💡 YOUR NEXT 3 ACTIONS**
+Concrete, personalised steps based on the complete picture. Include suggested amounts.
+
+Be direct and personal. Use £ throughout. No disclaimers. Reference specific dates and amounts from the data.`;
+
+  msgContent.push({type:'text',text:prompt});
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1800,messages:[{role:'user',content:msgContent}]})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`API error ${res.status}`);}
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'No response.';
+    cursor.style.display='none';
+    renderAIText(text,content);
+    const analysisEntry={text,date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+    LS.set('latestAnalysis',analysisEntry);
+    document.getElementById('aiTs').textContent=analysisEntry.date;
+    renderAIText(text,document.getElementById('savedAiContent'));
+    document.getElementById('savedAiDate').textContent=analysisEntry.date;
+    document.getElementById('analysis-empty').style.display='none';
+    document.getElementById('analysis-data').style.display='block';
+    logUpload();
+    _files=[]; renderQueue();
+  }catch(e){
+    cursor.style.display='none';
+    content.innerHTML=`<div style="color:var(--red);font-size:12px;line-height:1.8">
+      ${updateSummary.length?`<span style="color:var(--green)">✓ Data updated (${updateSummary.join(' · ')})</span><br><br>`:''}
+      ✗ <strong>AI analysis failed: ${e.message}</strong><br>
+      ${e.message.includes('401')||e.message.includes('auth')?'Check your Anthropic API key in ⚙️ Settings.':'Check your internet connection and try again.'}
+    </div>`;
+  }
+  spinner.style.display='none';
+  btn.disabled=false; btn.textContent='✦ Update Portfolio + Analyse with AI';
+}
+
+function logUpload(){
+  const entry={date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),files:_files.map(f=>f.name).join(', ')||'data updated'};
+  _uploadLog.push(entry); LS.set('uploadLog3',_uploadLog); renderUploadLog();
+}
+
+function renderAIText(text,container){
+  const sections=text.split(/\n(?=\*\*[📊📈✅⚠💡📅])/);
+  container.innerHTML=sections.filter(s=>s.trim()).map(section=>{
+    const lines=section.split('\n');
+    const title=lines[0].replace(/\*\*/g,'').trim();
+    const body=lines.slice(1).join('\n').trim();
+    if(title.match(/^[📊📈✅⚠💡📅]/)){
+      return `<div class="ai-sec"><div class="ai-sec-title">${title}</div><div>${body.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div></div>`;
+    }
+    return `<div style="margin-bottom:8px">${section.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`;
+  }).join('');
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────
+function saveKey(storageKey,inputId,statusId){
+  const val=document.getElementById(inputId).value.trim();
+  if(!val) return;
+  localStorage.setItem(storageKey,val);
+  const st=document.getElementById(statusId);
+  st.style.display='block';
+  setTimeout(()=>{st.style.display='none';},3000);
+  checkUploadNotices(); checkLiveNotices();
+}
+
+function loadKeys(){
+  const ak=getKey('anthropic_key'),fk=getKey('finnhub_key');
+  if(ak) document.getElementById('anthropicKeyInput').value=ak;
+  if(fk) document.getElementById('finnhubKeyInput').value=fk;
+}
+
+function resetData(){
+  if(!confirm('Clear all portfolio data?\n\nThis removes all uploaded files, charts, and analysis from this device. Your API keys will be kept.')) return;
+  LS.set('portfolioState', null);
+  LS.set('latestAnalysis', null);
+  LS.set('uploadLog3', []);
+  LS.set('docLibrary', []);
+  STATE = null;
+  _uploadLog = [];
+  _docLibrary = [];
+  renderHome();
+  renderDocLibrary();
+  document.getElementById('analysis-empty').style.display='block';
+  document.getElementById('analysis-data').style.display='none';
+  document.getElementById('savedAiContent').innerHTML='<div style="color:var(--muted);font-size:11px">No analysis yet.</div>';
+  document.getElementById('portfolioValueBadge').style.display='none';
+  document.getElementById('topbarSub').textContent='Upload your data to begin';
+  document.getElementById('home-empty').style.display='block';
+  document.getElementById('home-data').style.display='none';
+}
+
+// ── ALERTS ────────────────────────────────────────────────────────
+let _alerts=LS.get('priceAlerts2',[]);
+function saveAlerts(){LS.set('priceAlerts2',_alerts);}
+
+function populateAlertTickers(){
+  const sel=document.getElementById('alertTicker');
+  const current=sel.value;
+  sel.innerHTML='<option value="">Select holding…</option>';
+  const tickers=STATE?.openPositions?.map(p=>p.ticker)||['MSFT','NVDA','GOOGL','AMZN','VUSA','EQQQ','VWRP'];
+  tickers.forEach(t=>{ const opt=document.createElement('option'); opt.value=t; opt.textContent=t; sel.appendChild(opt); });
+  if(current) sel.value=current;
+}
+
+function renderAlerts(){
+  const list=document.getElementById('alertsList');
+  if(!_alerts.length){list.innerHTML='<div style="font-size:11px;color:var(--muted);padding:8px 0">No alerts set.</div>';return;}
+  list.innerHTML=_alerts.map((a,i)=>`
+    <div class="alert-item">
+      <div class="al-info"><div class="al-ticker">${a.ticker}</div><div class="al-desc">${a.dir==='above'?'Above':'Below'} £${a.price}${a.note?' · '+a.note:''}</div></div>
+      <div class="al-toggle ${a.active?'on':''}" onclick="toggleAlert(${i})"></div>
+      <div class="al-rm" onclick="removeAlert(${i})">✕</div>
+    </div>`).join('');
+}
+
+function addAlert(){
+  const ticker=document.getElementById('alertTicker').value;
+  const dir=document.getElementById('alertDir').value;
+  const price=parseFloat(document.getElementById('alertPrice').value);
+  const note=document.getElementById('alertNote').value.trim();
+  if(!ticker||!price||isNaN(price)){document.getElementById('alertPrice').style.borderColor='var(--red)';return;}
+  document.getElementById('alertPrice').style.borderColor='';
+  _alerts.push({ticker,dir,price,note,active:true});
+  saveAlerts(); renderAlerts();
+  document.getElementById('alertPrice').value='';
+  document.getElementById('alertNote').value='';
+}
+function toggleAlert(i){_alerts[i].active=!_alerts[i].active;saveAlerts();renderAlerts();}
+function removeAlert(i){_alerts.splice(i,1);saveAlerts();renderAlerts();}
+
+function checkAlerts(prices){
+  if(!('Notification' in window)||!STATE?.openPositions) return;
+  _alerts.filter(a=>a.active).forEach(a=>{
+    const pos=STATE.openPositions.find(p=>p.ticker===a.ticker);
+    if(!pos||!pos.ySymbol||!prices[pos.ySymbol]) return;
+    const liveGBP=toGBP(pos,prices[pos.ySymbol].price);
+    const triggered=a.dir==='above'?liveGBP>=a.price:liveGBP<=a.price;
+    if(triggered&&Notification.permission==='granted'){
+      new Notification('💰 '+a.ticker+' Alert',{body:`${a.ticker} is now £${liveGBP.toFixed(2)} — ${a.dir==='above'?'above':'below'} your £${a.price} target${a.note?' ('+a.note+')':''}`});
+    }
+  });
+  if(Notification.permission==='default') Notification.requestPermission();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function fmtGBP(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return '£'+Math.abs(n).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ── PWA INSTALL ───────────────────────────────────────────────────
+let _dip=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); _dip=e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click',async()=>{
+  if(!_dip) return;
+  _dip.prompt();
+  const{outcome}=await _dip.userChoice;
+  if(outcome==='accepted') document.getElementById('installBanner').classList.remove('show');
+  _dip=null;
+});
+
+// ── SERVICE WORKER ────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  const sw=`const C='isa-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.add('/'))));self.addEventListener('fetch',e=>{if(e.request.url.includes('finnhub')||e.request.url.includes('anthropic')||e.request.url.includes('fonts'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response('Offline',{status:503}))));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+}
+
+setTimeout(()=>{if('Notification' in window&&Notification.permission==='default') Notification.requestPermission();},3000);
+
+// ── RISK TAB ──────────────────────────────────────────────────────
+
+function renderRiskTab(){
+  if(!STATE){ return; } // empty states already shown in HTML
+  renderRiskProfile();
+  renderTradingCandidates();
+  renderWatchlist();
+}
+
+// ── RISK PROFILE ──────────────────────────────────────────────────
+function renderRiskProfile(){
+  if(!STATE || !STATE.openPositions) return;
+  const s = STATE;
+  const area = document.getElementById('riskScoreArea');
+  const breakdown = document.getElementById('riskBreakdown');
+  const meaning = document.getElementById('riskMeaning');
+
+  // Calculate risk factors
+  const factors = [];
+
+  // 1. Concentration risk — how many positions, what % is largest
+  const positions = s.openPositions || [];
+  const totalCost = positions.reduce((sum,p)=>sum+(p.totalCost||0),0);
+  const largestPct = positions.length ? Math.max(...positions.map(p=>((p.totalCost||0)/totalCost*100))) : 0;
+  let concentrationScore = 0;
+  if(positions.length >= 8) concentrationScore = 20;
+  else if(positions.length >= 5) concentrationScore = 40;
+  else if(positions.length >= 3) concentrationScore = 60;
+  else concentrationScore = 80;
+  if(largestPct > 40) concentrationScore += 20;
+  concentrationScore = Math.min(concentrationScore, 100);
+  factors.push({label:'Concentration Risk', desc:`${positions.length} positions, largest is ${largestPct.toFixed(0)}% of portfolio`, score:concentrationScore, higher:'worse'});
+
+  // 2. Volatility exposure — % in high-volatility assets
+  const highVolTickers = ['NVDA','TSLA','COIN','MSTR','AMD','PLTR','RIVN','3BLR','LQQ3','CRUD','WSLV'];
+  const leveragedTickers = ['3BLR','LQQ3'];
+  const highVolCost = positions.filter(p=>highVolTickers.includes(p.ticker)).reduce((s,p)=>s+(p.totalCost||0),0);
+  const leveragedCost = positions.filter(p=>leveragedTickers.includes(p.ticker)).reduce((s,p)=>s+(p.totalCost||0),0);
+  const volatilityPct = totalCost > 0 ? (highVolCost/totalCost*100) : 0;
+  const volatilityScore = Math.min(Math.round(volatilityPct * 1.2) + (leveragedCost > 0 ? 30 : 0), 100);
+  factors.push({label:'Volatility Exposure', desc:`${volatilityPct.toFixed(0)}% in high-volatility assets${leveragedCost>0?' · Leveraged ETFs detected':''}`, score:volatilityScore, higher:'worse'});
+
+  // 3. Geographic concentration — US only?
+  const usISINs = positions.filter(p=>p.isin&&p.isin.startsWith('US'));
+  const usPct = positions.length ? (usISINs.length/positions.length*100) : 0;
+  const geoScore = usPct > 80 ? 75 : usPct > 60 ? 50 : 25;
+  factors.push({label:'Geographic Concentration', desc:`${usPct.toFixed(0)}% US-listed assets`, score:geoScore, higher:'worse'});
+
+  // 4. Trading frequency — high frequency = higher risk behaviour
+  const tradesPerYear = s.totalTrades ? (s.totalTrades / 3) : 0; // approx 3 years
+  const freqScore = tradesPerYear > 30 ? 80 : tradesPerYear > 15 ? 55 : tradesPerYear > 5 ? 30 : 15;
+  factors.push({label:'Trading Frequency', desc:`~${Math.round(tradesPerYear)} trades/year`, score:freqScore, higher:'varies'});
+
+  // 5. Leverage exposure
+  const leverageScore = leveragedCost > 0 ? 90 : 0;
+  if(leveragedCost > 0) factors.push({label:'Leverage Exposure', desc:'Leveraged ETFs detected in portfolio', score:leverageScore, higher:'worse'});
+
+  // 6. Withdrawal behaviour — large withdrawals = potential panic
+  const withdrawalScore = (s.totalWithdrawn||0) > 2000 ? 40 : 10;
+  factors.push({label:'Withdrawal Behaviour', desc: (s.totalWithdrawn||0) > 2000 ? 'Large historical withdrawal detected' : 'Stable — no major withdrawals', score:withdrawalScore, higher:'varies'});
+
+  // Overall risk score — weighted average
+  const weights = [0.3, 0.3, 0.15, 0.1, 0.1, 0.05];
+  const overall = Math.round(factors.slice(0,6).reduce((sum,f,i)=>sum+f.score*(weights[i]||0.1),0));
+
+  // Risk label
+  let riskLabel, riskColour, riskDesc;
+  if(overall < 25){ riskLabel='Low'; riskColour='var(--green)'; riskDesc='Conservative, diversified, long-term focused.'; }
+  else if(overall < 45){ riskLabel='Moderate'; riskColour='var(--blue)'; riskDesc='Balanced approach with some growth exposure.'; }
+  else if(overall < 65){ riskLabel='Medium-High'; riskColour='var(--warn)'; riskDesc='Significant growth/volatile asset exposure.'; }
+  else if(overall < 80){ riskLabel='High'; riskColour='var(--red)'; riskDesc='High concentration in volatile assets.'; }
+  else { riskLabel='Very High'; riskColour='var(--red)'; riskDesc='Leveraged or extremely concentrated positions.'; }
+
+  area.innerHTML = `
+    <div class="risk-score-ring">
+      <div class="risk-score-num" style="color:${riskColour}">${overall}</div>
+      <div class="risk-score-label" style="color:${riskColour}">${riskLabel} Risk</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">${riskDesc}</div>
+    </div>
+    <div class="risk-meter">
+      <div class="risk-meter-fill" style="width:${overall}%;background:linear-gradient(90deg,var(--green),var(--warn),var(--red))"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:16px;letter-spacing:0.08em">
+      <span>LOW</span><span>MODERATE</span><span>HIGH</span><span>VERY HIGH</span>
+    </div>`;
+
+  breakdown.innerHTML = factors.map(f=>{
+    const col = f.score < 30 ? 'var(--green)' : f.score < 60 ? 'var(--warn)' : 'var(--red)';
+    return `<div class="risk-item">
+      <div class="risk-item-label"><strong>${f.label}</strong>${f.desc}</div>
+      <div class="risk-item-score" style="color:${col}">${f.score}</div>
+    </div>`;
+  }).join('');
+
+  // Personalised meaning
+  const tips = [];
+  if(concentrationScore > 60) tips.push({cls:'r', icon:'⚠️', title:'High Concentration', body:`Your largest position is ${largestPct.toFixed(0)}% of your portfolio. A sharp drop in that one stock would significantly hurt your overall returns. Consider spreading across more positions.`});
+  if(volatilityScore > 50) tips.push({cls:'y', icon:'📊', title:'Volatile Asset Mix', body:`${volatilityPct.toFixed(0)}% of your portfolio is in high-volatility stocks. This means larger swings day-to-day — which is fine if you can stomach it, but consider whether it matches your actual risk tolerance.`});
+  if(leveragedCost > 0) tips.push({cls:'r', icon:'⚡', title:'Leveraged ETFs Detected', body:'Leveraged ETFs decay over time due to daily rebalancing. They are designed for intraday or very short-term use only. Holding them long-term almost always results in losses even if the underlying goes up.'});
+  if(geoScore > 50) tips.push({cls:'b', icon:'🌍', title:'US Concentration', body:`${usPct.toFixed(0)}% of your holdings are US-listed. If the US market pulls back (trade wars, recession, tech selloff), your whole portfolio feels it. Adding VWRP or European/EM ETFs reduces this.`});
+  if(overall < 40) tips.push({cls:'g', icon:'✅', title:'Well-Managed Risk', body:'Your portfolio shows sensible risk management — diversified positions, limited leverage, and stable behaviour. You have capacity to take on more risk if you want higher potential returns.'});
+
+  meaning.innerHTML = tips.length ? tips.map(t=>`
+    <div class="insight ${t.cls}">
+      <div class="i-icon">${t.icon}</div>
+      <div><div class="i-title">${t.title}</div><div class="i-body">${t.body}</div></div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:11px;padding:10px 0">Risk profile looks balanced.</div>';
+}
+
+// ── TRADING CANDIDATES ────────────────────────────────────────────
+function renderTradingCandidates(){
+  const el = document.getElementById('tradingCandidates');
+  if(!STATE || !STATE.openPositions || !STATE.openPositions.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px 0">Upload your CSV to see analysis.</div>';
+    return;
+  }
+  const highVolTickers = ['NVDA','TSLA','COIN','AMD','MSFT','GOOGL','AMZN','LLY','AAPL'];
+  const candidates = STATE.openPositions.filter(p => highVolTickers.includes(p.ticker));
+  const profiles = {
+    'NVDA': {vol:'Very High', why:'AI news-driven, 3–8% daily moves common. Strong momentum stock.', day:'✓ Good day trade candidate'},
+    'TSLA': {vol:'Very High', why:'Elon-news driven, huge intraday swings. High spread.', day:'✓ For experienced traders only'},
+    'COIN': {vol:'High', why:'Crypto proxy — follows BTC. Volatile around crypto news.', day:'✓ Watch BTC for signals'},
+    'AMD': {vol:'High', why:'Chipmaker, moves on AI/earnings news. Good momentum stock.', day:'✓ Strong catalyst candidate'},
+    'MSFT': {vol:'Medium', why:'Large-cap, stable but moves on earnings and AI news.', day:'◐ Better for swing trading'},
+    'GOOGL': {vol:'Medium', why:'Moves on ad revenue, AI announcements, antitrust news.', day:'◐ Earnings plays work well'},
+    'AMZN': {vol:'Medium', why:'E-commerce + AWS. Big earnings moves 5–10%.', day:'◐ Earnings quarter focus'},
+    'LLY': {vol:'High', why:'Pharma — sharp moves on FDA approvals and trial results.', day:'✓ News catalyst trading'},
+    'AAPL': {vol:'Low-Med', why:'Steady blue chip. Moves on product launches and earnings.', day:'◐ Less suitable for day trading'},
+  };
+  if(!candidates.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px 0">None of your current holdings are typical day trading candidates. See the Suggested list above.</div>';
+    return;
+  }
+  el.innerHTML = candidates.map(p=>{
+    const prof = profiles[p.ticker] || {vol:'Unknown', why:'Limited data available.', day:'? Assess independently'};
+    const col = prof.vol==='Very High'?'var(--red)':prof.vol==='High'?'var(--warn)':prof.vol==='Medium'?'var(--blue)':'var(--muted)';
+    return `<div class="insight b" style="border-left-color:${col}">
+      <div class="i-icon" style="font-size:13px;font-family:'Syne',sans-serif;font-weight:800;color:${col}">${p.ticker}</div>
+      <div>
+        <div class="i-title">${p.name||p.ticker} <span style="font-size:10px;font-weight:400;color:${col}">· ${prof.vol} volatility</span></div>
+        <div class="i-body">${prof.why}<br><span style="color:var(--text)">${prof.day}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── WATCHLIST ─────────────────────────────────────────────────────
+let _watchlist = LS.get('riskWatchlist', []);
+
+function renderWatchlist(){
+  const el = document.getElementById('watchlistItems');
+  if(!_watchlist.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px 0">No stocks added yet. Type a ticker above and tap Add.</div>';
+    return;
+  }
+  el.innerHTML = _watchlist.map((item,i) => `
+    <div class="watch-item ${item.change>=0?'up':'dn'}" id="watch-${item.ticker}">
+      <div>
+        <div><span class="watch-ticker">${item.ticker}</span><span style="font-size:10px;color:var(--muted);margin-left:8px">${item.name||''}</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${item.note||'Added '+item.added}</div>
+      </div>
+      <div>
+        <div class="watch-price">${item.price ? '£'+item.price.toFixed(2) : '—'}</div>
+        <div class="watch-chg ${item.change>=0?'pnl-pos':'pnl-neg'}">${item.price ? (item.change>=0?'+':'')+item.change.toFixed(2)+'%' : 'tap refresh'}</div>
+        <div class="watch-rm" onclick="removeFromWatchlist(${i})">✕</div>
+      </div>
+    </div>`).join('');
+}
+
+function addToWatchlist(){
+  const input = document.getElementById('watchlistInput');
+  const ticker = input.value.trim().toUpperCase();
+  if(!ticker) return;
+  if(_watchlist.find(w=>w.ticker===ticker)){ input.value=''; return; }
+  _watchlist.push({ticker, price:null, change:0, added:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'})});
+  LS.set('riskWatchlist',_watchlist);
+  input.value='';
+  renderWatchlist();
+  refreshWatchlist();
+}
+
+function removeFromWatchlist(i){
+  _watchlist.splice(i,1);
+  LS.set('riskWatchlist',_watchlist);
+  renderWatchlist();
+}
+
+async function refreshWatchlist(){
+  if(!_watchlist.length) return;
+  if(!getKey('finnhub_key')){ return; }
+  if(!_gbpUsd){ try{ const fx=await fetchGbpUsd(); _gbpUsd=fx; }catch(e){} }
+  const rate = _gbpUsd || 1.27;
+  for(const item of _watchlist){
+    try{
+      const q = await finnhubGet(item.ticker);
+      item.price = q.price / rate; // convert USD to GBP
+      item.change = q.prev ? ((q.price-q.prev)/q.prev*100) : 0;
+      await new Promise(r=>setTimeout(r,120));
+    }catch(e){ console.warn('Watchlist fetch failed:',item.ticker,e.message); }
+  }
+  LS.set('riskWatchlist',_watchlist);
+  renderWatchlist();
+}
+
+// ── NEWS FEED ─────────────────────────────────────────────────────
+let _newsCategory = 'general';
+
+function setNewsCategory(cat, btn){
+  _newsCategory = cat;
+  document.querySelectorAll('.news-cat-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  loadNews();
+}
+
+async function loadNews(){
+  const el = document.getElementById('newsFeed');
+  const notice = document.getElementById('newsKeyNotice');
+  const key = getKey('finnhub_key');
+  if(!key){
+    notice.style.display='block';
+    el.innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px">Add Finnhub API key in ⚙️ Settings to see market news.</div>';
+    return;
+  }
+  notice.style.display='none';
+  el.innerHTML = '<div class="news-loading">⟳ Loading news…</div>';
+  try{
+    const r = await fetch(`https://finnhub.io/api/v1/news?category=${_newsCategory}&minId=0&token=${key}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const articles = await r.json();
+    if(!articles || !articles.length){ el.innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px">No news available right now.</div>'; return; }
+
+    el.innerHTML = articles.slice(0,20).map(a=>{
+      const date = new Date(a.datetime*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      const summary = a.summary ? a.summary.slice(0,120)+(a.summary.length>120?'…':'') : '';
+      return `<a class="news-card" href="${a.url}" target="_blank" rel="noopener">
+        <div class="news-source">${a.source||'Unknown'}</div>
+        <div class="news-headline">${a.headline}</div>
+        ${summary?`<div class="news-summary">${summary}</div>`:''}
+        <div class="news-meta"><span>${date}</span><span style="color:var(--accent)">Read →</span></div>
+      </a>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);font-size:11px;text-align:center;padding:20px">✗ Could not load news: ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
